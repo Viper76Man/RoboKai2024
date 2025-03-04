@@ -40,6 +40,7 @@ public class LeftAutoV9 extends LinearOpMode {
     public static Pose pickup1 = new Pose(48, 42.5, Math.toRadians(-93));
     public Path scorePreload;
     public Path pickup_1;
+    public PathChain firstPickup;
     public Pose currentPose;
 
     public int step = 1;
@@ -69,8 +70,18 @@ public class LeftAutoV9 extends LinearOpMode {
         poseUpdater.setStartingPose(startPose);
         scorePreload = new Path(new BezierLine(new Point(startPose.getX(), startPose.getY(), Point.CARTESIAN), new Point(bucket.getX(), bucket.getY(), Point.CARTESIAN)));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), bucket.getHeading());
-        pickup_1 = new Path(new BezierLine(new Point(bucket.getX(), bucket.getY(), Point.CARTESIAN), new Point(pickup1.getX(), pickup1.getY(), Point.CARTESIAN)));
+        pickup_1 = new Path(new BezierLine(bucket, pickup1));
+        // THE HEADING IS AROUND 2000, change to fix?
         pickup_1.setLinearHeadingInterpolation(bucket.getHeading(), pickup1.getHeading());
+        firstPickup = follower.pathBuilder()
+                .addPath(pickup_1)
+                .addTemporalCallback(0, ()->{
+                    grippers.setPosition(constants.GRIPPERS_OPEN);
+                    intakeSlides.intakeOutAuto();
+                    differentialV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
+                    differentialV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
+                })
+                .build();
         waitForStart();
         stepTimer.reset();
         while(opModeIsActive()) {
@@ -144,23 +155,13 @@ public class LeftAutoV9 extends LinearOpMode {
                 //while (stepTimer.seconds() < 3) {
                     //follower.turnTo(pickup1.getHeading());
                 //}
-                Path path = new Path(new BezierLine(bucket, pickup1));
-                path.setLinearHeadingInterpolation(bucket.getHeading(), pickup1.getHeading());
-                PathChain aMetaphorForHowIDontGiveAShit = follower.pathBuilder()
-                        .addPath(path)
-                        .addTemporalCallback(0, ()->{
-                            grippers.setPosition(constants.GRIPPERS_OPEN);
-                            intakeSlides.intakeOutAuto();
-                            differentialV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
-                            differentialV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
-                        })
-                        .build();
                 if(!trajFollowed) {
-                    follower.followPath(aMetaphorForHowIDontGiveAShit, true);
+                    follower.followPath(firstPickup, true);
                     trajFollowed = true;
                 }
                 stepTimer.reset();
                 if(follower.atParametricEnd()) {
+                    follower.breakFollowing();
                     step = 7;
                     trajFollowed = false;
                 }
