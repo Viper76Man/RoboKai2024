@@ -19,13 +19,19 @@ public class IntakeSlidesV1 {
 
     public void intakeOut(){
         intakeSlides.setPower(1);
-        intakeSlides.setTargetPosition(231);
+        intakeSlides.setTargetPosition(362);
+        intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+    public void intakeOutAuto(){
+        intakeSlides.setPower(1);
+        intakeSlides.setTargetPosition(152);
         intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void intakeIn(){
         intakeSlides.setPower(1);
-        intakeSlides.setTargetPosition(30);
+        intakeSlides.setTargetPosition(52);
         intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
