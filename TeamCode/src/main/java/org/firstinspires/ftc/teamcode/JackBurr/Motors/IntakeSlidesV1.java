@@ -25,7 +25,7 @@ public class IntakeSlidesV1 {
 
     public void intakeOutAuto(){
         intakeSlides.setPower(1);
-        intakeSlides.setTargetPosition(152);
+        intakeSlides.setTargetPosition(102);
         intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 

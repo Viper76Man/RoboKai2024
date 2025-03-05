@@ -27,6 +27,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
+import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
 
 @Autonomous
 @Config
@@ -37,9 +38,11 @@ public class LeftAutoV9 extends LinearOpMode {
     public PathChain scorePreloadChain;
     public static Pose startPose = new Pose(38, 62, Math.toRadians(-90));
     public static Pose bucket = new Pose(50, 52, Math.toRadians(-135));
-    public static Pose pickup1 = new Pose(48, 42.5, Math.toRadians(-93));
+    public static Pose pickup1 = new Pose(48.5, 42.5, Math.toRadians(-90));
+    public static Pose bucket2 = new Pose(51.5, 51,  Math.toRadians(-135));
     public Path scorePreload;
     public Path pickup_1;
+    public Path delivery_02;
     public PathChain firstPickup;
     public Pose currentPose;
 
@@ -54,6 +57,7 @@ public class LeftAutoV9 extends LinearOpMode {
     public DeliveryAxonV1 deliveryAxon = new DeliveryAxonV1();
     public DeliveryGrippersV1 deliveryGrippers = new DeliveryGrippersV1();
     public DifferentialV2 differentialV2 = new DifferentialV2();
+    public WristAxonV1 wrist = new WristAxonV1();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -61,6 +65,7 @@ public class LeftAutoV9 extends LinearOpMode {
         slides.init(hardwareMap);
         deliveryAxon.init(hardwareMap);
         intakeSlides.init(hardwareMap);
+        wrist.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
         differentialV2.init(hardwareMap, telemetry);
         deliveryGrippers.init(hardwareMap, telemetry);
@@ -71,6 +76,8 @@ public class LeftAutoV9 extends LinearOpMode {
         scorePreload = new Path(new BezierLine(new Point(startPose.getX(), startPose.getY(), Point.CARTESIAN), new Point(bucket.getX(), bucket.getY(), Point.CARTESIAN)));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), bucket.getHeading());
         pickup_1 = new Path(new BezierLine(bucket, pickup1));
+        delivery_02 = new Path(new BezierLine(pickup1, bucket2));
+        delivery_02.setLinearHeadingInterpolation(pickup1.getHeading(), bucket.getHeading());
         // THE HEADING IS AROUND 2000, change to fix?
         pickup_1.setLinearHeadingInterpolation(bucket.getHeading(), pickup1.getHeading());
         firstPickup = follower.pathBuilder()
@@ -99,28 +106,32 @@ public class LeftAutoV9 extends LinearOpMode {
             telemetry.addLine("\t Heading: " + Math.toDegrees(follower.getPose().getHeading()));
             telemetry.addLine("\t Heading (poseUpdater): " + Math.toDegrees(poseUpdater.getPose().getHeading()));
             if (step == 1) {
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                 if(!trajFollowed) {
                     follower.followPath(scorePreload, true);
                     stepTimer.reset();
                     trajFollowed = true;
                 }
-                if(stepTimer.seconds() > 1){
+                if(stepTimer.seconds() > 1.3){
                     follower.breakFollowing();
-                    follower.setPose(bucket);
+                    //follower.setPose(bucket);
                     stepTimer.reset();
                     step = 2;
                 }
             }
             if(step == 2){
                 while (stepTimer.seconds() < 4){
+                    if (isStopRequested()) {
+                        return;
+                    }
                     follower.update();
                     if(stepTimer.seconds() > 2){
                         deliveryAxon.setPosition(constants.DELIVERY_UP);
                     }
                     if(stepTimer.seconds() < 3.5) {
                         telemetry.addLine("Moving slides up....");
-                        slides.runRightSlideToPositionPID(constants.RIGHT_SLIDE_HIGH_BASKET);
-                        slides.runLeftSlideToPositionPID(constants.LEFT_SLIDE_HIGH_BASKET);
+                        slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET, 1);
+                        slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET, 1);
                     }
                     if(stepTimer.seconds() < 3.75 && stepTimer.seconds() > 3.2) {
                         deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
@@ -133,6 +144,7 @@ public class LeftAutoV9 extends LinearOpMode {
             if(step == 4){
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 grippers.setPosition(constants.GRIPPERS_OPEN);
+                wrist.setPosition(constants.WRIST_CENTER);
                 if(stepTimer.seconds() > 1){
                     stepTimer.reset();
                     step = 5;
@@ -140,8 +152,8 @@ public class LeftAutoV9 extends LinearOpMode {
             }
             if(step == 5){
                 if(stepTimer.seconds() < 2) {
-                    slides.runLeftSlideToPositionPID(0);
-                    slides.runRightSlideToPositionPID(0);
+                    slides.runLeftSlideToPosition(0, 1);
+                    slides.runRightSlideToPosition(0,1 );
                     telemetry.addLine("Moving slides down....");
                 }
                 else {
@@ -160,22 +172,111 @@ public class LeftAutoV9 extends LinearOpMode {
                     trajFollowed = true;
                 }
                 stepTimer.reset();
-                if(follower.atParametricEnd()) {
+                if(!follower.isBusy()) {
                     follower.breakFollowing();
+                    //follower.setPose(pickup1);
+                    stepTimer.reset();
                     step = 7;
                     trajFollowed = false;
                 }
             }
             if(step == 7){
                 //follower.followPath();
-                while (stepTimer.seconds() < 5) {
+                while (stepTimer.seconds() < 4 && stepTimer.seconds() > 2) {
+                    if (isStopRequested()) {
+                    return;
+                    }
                     grippers.setPosition(constants.GRIPPERS_GRAB);
+                    wrist.setPosition(constants.WRIST_CENTER);
                 }
-                while (stepTimer.seconds() > 5 && stepTimer.seconds() < 6) {
+                while (stepTimer.seconds() > 4 && stepTimer.seconds() < 6) {
+                    if (isStopRequested()) {
+                        return;
+                    }
                     differentialV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                     differentialV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                    wrist.setPosition(constants.WRIST_CENTER);
                 }
-                step = 8;
+                while (stepTimer.seconds() > 6 && stepTimer.seconds() < 8) {
+                    if (isStopRequested()) {
+                        return;
+                    }
+                    intakeSlides.intakeAllTheWayIn();
+                    wrist.setPosition(constants.WRIST_CENTER);
+                }
+                while (stepTimer.seconds() > 8 && stepTimer.seconds() < 9) {
+                    if (isStopRequested()) {
+                        return;
+                    }
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                    wrist.setPosition(constants.WRIST_CENTER);
+                }
+                while (stepTimer.seconds() > 9 && stepTimer.seconds() < 10) {
+                    if (isStopRequested()) {
+                        return;
+                    }
+                    grippers.setPosition(constants.GRIPPERS_OPEN);
+                }
+                while (stepTimer.seconds() > 10){
+                    if (isStopRequested()) {
+                    return;
+                    }
+                    step = 8;
+                    stepTimer.reset();
+                    trajFollowed = false;
+                    break;
+                }
+            }
+            if(step == 8){
+                if(!trajFollowed) {
+                    follower.followPath(delivery_02, true);
+                    trajFollowed = true;
+                    stepTimer.reset();
+                }
+                if(!follower.isBusy()) {
+                    if(stepTimer.seconds() > 1) {
+                        follower.breakFollowing();
+                        stepTimer.reset();
+                        step = 9;
+                        trajFollowed = false;
+                    }
+                }
+            }
+
+            if (step == 9){
+                while (stepTimer.seconds() < 3) {
+                    if (isStopRequested()) {
+                        return;
+                    }
+                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET, 1);
+                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET, 1);
+                    if(stepTimer.seconds() > 2){
+                        deliveryAxon.setPosition(constants.DELIVERY_UP);
+                    }
+                }
+                while (stepTimer.seconds() < 5){
+                    if (isStopRequested()) {
+                        return;
+                    }
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                }
+                step = 10;
+            }
+            if(step == 10){
+                while (stepTimer.seconds() < 1.5) {
+                    if (isStopRequested()) {
+                    return;
+                    }
+                    deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                }
+                while (stepTimer.seconds() < 3) {
+                    if (isStopRequested()) {
+                    return;
+                    }
+                    slides.runLeftSlideToPosition(0, 1);
+                    slides.runRightSlideToPosition(0, 1);
+                }
+                step = 11;
             }
 
 

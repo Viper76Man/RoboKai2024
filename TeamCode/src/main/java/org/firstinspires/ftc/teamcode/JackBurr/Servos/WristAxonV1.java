@@ -11,7 +11,6 @@ public class WristAxonV1 {
     public void init(HardwareMap hardwareMap){
         this.hardwareMap = hardwareMap;
         axon = hardwareMap.get(Servo.class, "wristServo");
-        setPosition(0.42);
     }
 
     public void setPosition(double position){
