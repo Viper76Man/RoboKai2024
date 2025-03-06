@@ -11,6 +11,7 @@ import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotConstantsV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
@@ -36,8 +37,19 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
 @Autonomous(name = "Sample Auto", group = "Coach")
 public class BucketAuto extends OpMode {
 
+    public DeliveryGrippersV1 deliveryGrippers = new DeliveryGrippersV1();
+    public DeliveryAxonV1 deliveryAxon = new DeliveryAxonV1();
+    public DeliverySlidesV1 slides = new DeliverySlidesV1();
+    public RobotConstantsV1 constants = new RobotConstantsV1();
+    public GrippersV1 grippers = new GrippersV1();
+    public IntakeSlidesV1 intakeSlides = new IntakeSlidesV1();
+    public DifferentialV2 diffV2 = new DifferentialV2();
+    public WristAxonV1 wrist = new WristAxonV1();
+
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
+    public ElapsedTime stateTimer = new ElapsedTime();
+    public boolean pathFollowed = false;
 
     /** This is the variable where we store the state of our auto.
      * It is used by the pathUpdate method. */
@@ -68,15 +80,15 @@ public class BucketAuto extends OpMode {
     private final Pose pickup3Pose = new Pose(24, 135, Math.toRadians(0));
 
     /** Park Pose for our robot, after we do all of the scoring. */
-    private final Pose parkPose = new Pose(80, 98, Math.toRadians(90));
+    private final Pose parkPose = new Pose(80, 96, Math.toRadians(90));
 
     /** Park Control Pose for our robot, this is used to manipulate the bezier curve that we will create for the parking.
      * The Robot will not go to this pose, it is used a control point for our bezier curve. */
-    private final Pose parkControlPose = new Pose(80, 98, Math.toRadians(90));
+    private final Pose parkControlPose = new Pose(80, 120,Math.toRadians(90));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private Path scorePreload, park;
-    private PathChain grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+    private PathChain scorePreloadChain, parkChain, grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -100,13 +112,30 @@ public class BucketAuto extends OpMode {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(new Point(startPose), new Point(scorePose)));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
-
+        scorePreloadChain = follower.pathBuilder()
+                .addPath(scorePreload)
+                .addTemporalCallback(0, ()->{
+                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET, 1);
+                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET, 1);
+                })
+                .addTemporalCallback(20, ()->{
+                    deliveryAxon.setPosition(constants.DELIVERY_UP);
+                })
+                .build();
         /* Here is an example for Constant Interpolation
         scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(scorePose), new Point(pickup1Pose)))
+                .addTemporalCallback(0, ()->{
+                    slides.runLeftSlideToPosition(0, 1);
+                    slides.runRightSlideToPosition(0, 1);
+                    intakeSlides.intakeOut();
+                    grippers.setPosition(constants.GRIPPERS_OPEN);
+                    diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
+                    diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
+                })
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
                 .build();
 
@@ -114,18 +143,40 @@ public class BucketAuto extends OpMode {
         scorePickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(pickup1Pose), new Point(scorePose)))
                 .setLinearHeadingInterpolation(pickup1Pose.getHeading(), scorePose.getHeading())
+                .addTemporalCallback(0, ()->{
+                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET,1);
+                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET,1);
+                })
+                .addTemporalCallback(50, ()->{
+                    deliveryAxon.setPosition(constants.DELIVERY_UP);
+                })
                 .build();
 
         /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup2 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(scorePose), new Point(pickup2Pose)))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
+                .addTemporalCallback(0, ()->{
+                    slides.runLeftSlideToPosition(0, 1);
+                    slides.runRightSlideToPosition(0, 1);
+                    intakeSlides.intakeOut();
+                    grippers.setPosition(constants.GRIPPERS_OPEN);
+                    diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
+                    diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
+                })
                 .build();
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(pickup2Pose), new Point(scorePose)))
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
+                .addTemporalCallback(0, ()->{
+                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET,1);
+                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET,1);
+                })
+                .addTemporalCallback(50, ()->{
+                    deliveryAxon.setPosition(constants.DELIVERY_UP);
+                })
                 .build();
 
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -143,6 +194,13 @@ public class BucketAuto extends OpMode {
         /* This is our park path. We are using a BezierCurve with 3 points, which is a curved line that is curved based off of the control point */
         park = new Path(new BezierCurve(new Point(scorePose), /* Control Point */ new Point(parkControlPose), new Point(parkPose)));
         park.setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading());
+        parkChain = follower.pathBuilder()
+                .addPath(park)
+                .addTemporalCallback(0, ()->{
+                    slides.runLeftSlideToPosition(0, 1);
+                    slides.runRightSlideToPosition(0, 1);
+                })
+                .build();
     }
 
     /** This switch is called continuously and runs the pathing, at certain points, it triggers the action state.
@@ -151,8 +209,31 @@ public class BucketAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                follower.followPath(scorePreload);
-                setPathState(1);
+                wrist.setPosition(constants.WRIST_CENTER);
+                if(!pathFollowed){
+                    follower.followPath(scorePreloadChain);
+                    stateTimer.reset();
+                    pathFollowed = true;
+                }
+                if(follower.isBusy() && stateTimer.seconds() > 0.2){
+                    deliveryAxon.setPosition(constants.DELIVERY_UP);
+                }
+                if(pathFollowed && !follower.isBusy()) {
+                    if(stateTimer.seconds() < 2){
+                        deliveryAxon.setPosition(constants.DELIVERY_UP);
+                    }
+                    if (stateTimer.seconds() < 3 && stateTimer.seconds() > 2){
+                        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                    }
+                    if (stateTimer.seconds() < 4.25 && stateTimer.seconds() > 3){
+                        deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                    }
+                    if(stateTimer.seconds() > 4.25) {
+                        setPathState(1);
+                        stateTimer.reset();
+                        pathFollowed = false;
+                    }
+                }
                 break;
             case 1:
 
@@ -161,84 +242,162 @@ public class BucketAuto extends OpMode {
                 - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
                 - Robot Position: "if(follower.getPose().getX() > 36) {}"
                 */
-
+                wrist.setPosition(constants.WRIST_CENTER);
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Preload */
-
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup1,true);
-                    setPathState(2);
+                    if(!pathFollowed) {
+                        follower.followPath(grabPickup1, true);
+                        pathFollowed = true;
+                    }
+                    if(pathFollowed && stateTimer.seconds() < 2){
+                        diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
+                        diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
+                    }
+                    else if(pathFollowed && stateTimer.seconds() > 2 && stateTimer.seconds() < 2.75){
+                        grippers.setPosition(constants.GRIPPERS_GRAB);
+                    }
+                    else if(pathFollowed && stateTimer.seconds() > 2.75 && stateTimer.seconds() < 4.75){
+                        if(stateTimer.seconds() > 4){
+                            intakeSlides.intakeAllTheWayIn();
+                        }
+                        diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                        diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
+                    }
+                    else if(pathFollowed && stateTimer.seconds() > 4.75 & stateTimer.seconds() < 6){
+                        if(stateTimer.seconds() > 5.15){
+                            grippers.setPosition(constants.GRIPPERS_OPEN);
+                        }
+                        else {
+                            deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                        }
+                    }
+                    else if(stateTimer.seconds() > 6) {
+                        setPathState(2);
+                        stateTimer.reset();
+                        pathFollowed = false;
+                    }
                 }
                 break;
             case 2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
                 if(!follower.isBusy()) {
                     /* Grab Sample */
-
+                    wrist.setPosition(constants.WRIST_CENTER);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup1,true);
-                    setPathState(3);
+                    if(!pathFollowed) {
+                        follower.followPath(scorePickup1, true);
+                        stateTimer.reset();
+                        pathFollowed = true;
+                    }
+                    if(pathFollowed && !follower.isBusy()){
+                        if(stateTimer.seconds() < 2){
+                            deliveryAxon.setPosition(constants.DELIVERY_UP);
+                        }
+                        if (stateTimer.seconds() < 2.75 && stateTimer.seconds() > 2){
+                            deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                        }
+                        if (stateTimer.seconds() < 3.75 && stateTimer.seconds() > 2.75){
+                            deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                        }
+                        if(stateTimer.seconds() > 3.75) {
+                            deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                            setPathState(3);
+                            stateTimer.reset();
+                            pathFollowed = false;
+                        }
+                    }
                 }
                 break;
             case 3:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
-                    /* Score Sample */
-
+                    /* Score Preload */
+                    deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                    wrist.setPosition(constants.WRIST_CENTER);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2,true);
-                    setPathState(4);
+                    if(!pathFollowed) {
+                        follower.followPath(grabPickup2, true);
+                        pathFollowed = true;
+                    }
+                    if(pathFollowed && stateTimer.seconds() < 2){
+                        diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
+                        diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
+                    }
+                    else if(pathFollowed && stateTimer.seconds() > 2 && stateTimer.seconds() < 3){
+                        grippers.setPosition(constants.GRIPPERS_GRAB);
+                    }
+                    else if(pathFollowed && stateTimer.seconds() > 3 && stateTimer.seconds() < 4.75){
+                        if(stateTimer.seconds() > 4){
+                            intakeSlides.intakeAllTheWayIn();
+                        }
+                        diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                        diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
+                    }
+                    else if(pathFollowed && stateTimer.seconds() > 4.75 & stateTimer.seconds() < 6){
+                        if(stateTimer.seconds() > 5.15){
+                            grippers.setPosition(constants.GRIPPERS_OPEN);
+                        }
+                        else {
+                            deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                        }
+                    }
+                    else if(stateTimer.seconds() > 7) {
+                        setPathState(4);
+                        stateTimer.reset();
+                        pathFollowed = false;
+                    }
                 }
                 break;
             case 4:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
                 if(!follower.isBusy()) {
+                    wrist.setPosition(constants.WRIST_CENTER);
                     /* Grab Sample */
-
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup2,true);
-                    setPathState(5);
+                    if (!pathFollowed) {
+                        follower.followPath(scorePickup2, true);
+                        stateTimer.reset();
+                        pathFollowed = true;
+                    }
+                    if (pathFollowed && !follower.isBusy()) {
+                        if (stateTimer.seconds() < 2) {
+                            deliveryAxon.setPosition(constants.DELIVERY_UP);
+                        }
+                        if (stateTimer.seconds() < 3 && stateTimer.seconds() > 2) {
+                            deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                        }
+                        if (stateTimer.seconds() < 4.25 && stateTimer.seconds() > 3) {
+                            deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                        }
+                        if (stateTimer.seconds() > 4.25 && stateTimer.seconds() < 6) {
+                            slides.runLeftSlideToPosition(0, 1);
+                            slides.runRightSlideToPosition(0, 1);
+                        }
+                        if (stateTimer.seconds() > 6) {
+                            setPathState(5);
+                            stateTimer.reset();
+                            pathFollowed = false;
+                        }
+                    }
                 }
                 break;
             case 5:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Sample */
-
+                    wrist.setPosition(constants.WRIST_CENTER);
+                    diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
+                    diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                    intakeSlides.intakeAllTheWayIn();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup3,true);
+                    follower.followPath(parkChain,true);
+                    deliveryAxon.setPosition(constants.DELIVERY_LEVEL_ONE_ASCENT);
                     setPathState(6);
                 }
                 break;
             case 6:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if(!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup3, true);
-                    setPathState(7);
-                }
-                break;
-            case 7:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
-                    /* Score Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are parked */
-                    follower.followPath(park,true);
-                    setPathState(8);
-                }
-                break;
-            case 8:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
-                    /* Level 1 Ascent */
-
-                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    setPathState(-1);
-                }
+                deliveryAxon.setPosition(constants.DELIVERY_LEVEL_ONE_ASCENT);
                 break;
         }
     }
@@ -272,7 +431,15 @@ public class BucketAuto extends OpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
-
+        deliveryGrippers.init(hardwareMap, telemetry);
+        deliveryAxon.init(hardwareMap);
+        diffV2.init(hardwareMap, telemetry);
+        grippers.init(hardwareMap, telemetry);
+        slides.init(hardwareMap);
+        intakeSlides.init(hardwareMap);
+        intakeSlides.resetSlides();
+        slides.resetSlides();
+        wrist.init(hardwareMap);
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);

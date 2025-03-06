@@ -34,6 +34,12 @@ public class DeliverySlidesV1 {
         rightController = new PIDController(kP, kI, kD);
     }
 
+    public void resetSlides(){
+        this.leftSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.rightSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.leftSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        this.rightSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
     public void runLeftSlideToPosition(int position, double power){
         if(leftSlide.getCurrentPosition() != position) {
             leftSlide.setPower(power);

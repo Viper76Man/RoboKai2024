@@ -11,7 +11,7 @@ public class RobotConstantsV1 {
     public double GRIPPERS_OPEN = 0.45;
     public double GRIPPERS_CLOSE = 0;
     public double GRIPPERS_GRAB = 0.05;
-    public double DELIVERY_GRIPPERS_CLOSE = 0.7;
+    public double DELIVERY_GRIPPERS_CLOSE = 0.9;
     public double DELIVERY_GRIPPERS_GRAB = 0.47;
     public double DELIVERY_GRIPPERS_OPEN = 0.25;
     //===============================================================================================================
@@ -32,7 +32,8 @@ public class RobotConstantsV1 {
     public double DELIVERY_LEVEL_TWO_ASCENT = 0.555; //0.61
     public double DELIVERY_UP = 0.555; //0.61
     public double DELIVERY_DROP = 0.585; //0.64
-    public double DELIVERY_HIGH_BAR = 0.575; //0.63
+    public double DELIVERY_HIGH_BAR = 0.56; //0.63
+    public double DELIVERY_HOOK = 0.76;
     public double DELIVERY_WALL_PICKUP = 0.755; //0.81
     public double WRIST_CENTER = 0.21;
     //MOTORS=========================================================================================================
@@ -43,10 +44,10 @@ public class RobotConstantsV1 {
     public int RIGHT_SLIDE_HIGH_BASKET = 3195;
     public int LEFT_SLIDE_LOW_BASKET = -1582;
     public int RIGHT_SLIDE_LOW_BASKET = 1582;
-    public int LEFT_SLIDE_HIGH_BAR = -526;
-    public int RIGHT_SLIDE_HIGH_BAR = 526;
-    public int LEFT_SLIDE_HIGH_BAR_AUTO = -526;
-    public int RIGHT_SLIDE_HIGH_BAR_AUTO = 526;
+    public int LEFT_SLIDE_HIGH_BAR = -468;
+    public int RIGHT_SLIDE_HIGH_BAR = 468;
+    public int LEFT_SLIDE_HIGH_BAR_AUTO = -644;
+    public int RIGHT_SLIDE_HIGH_BAR_AUTO = 644;
     public int LEFT_SLIDE_LEVEL_TWO_ASCENT = -3370;
     public int RIGHT_SLIDE_LEVEL_TWO_ASCENT = 3370;
     public int LEFT_SLIDE_LEVEL_TWO_ASCENT_HOOK = -629;

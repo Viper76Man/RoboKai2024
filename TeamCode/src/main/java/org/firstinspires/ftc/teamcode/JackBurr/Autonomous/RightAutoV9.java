@@ -36,10 +36,10 @@ public class RightAutoV9 extends LinearOpMode {
     public PoseUpdater poseUpdater;
 
 
-    public static Pose startPose = new Pose(-10, 62, Math.toRadians(90));
-    public static Pose highBar = new Pose(-5, 30);
+    public static Pose startPose = new Pose(9, 63, Math.toRadians(180));
+    public static Pose highBar = new Pose(39, 63, Math.toRadians(180));
     public PathChain scorePreloadChain;
-
+    public Path scorePreload;
 
     public ElapsedTime stepTimer = new ElapsedTime();
 
@@ -68,15 +68,14 @@ public class RightAutoV9 extends LinearOpMode {
         follower = new Follower(hardwareMap);
         poseUpdater = new PoseUpdater(hardwareMap);
         follower.setStartingPose(startPose);
+        follower.setMaxPower(80);
         poseUpdater.setStartingPose(startPose);
 
-
+        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(highBar)));
+        scorePreload.setConstantHeadingInterpolation(startPose.getHeading());
         scorePreloadChain = follower.pathBuilder()
-                .addPath(new Path(new BezierLine(new Point(startPose), new Point(highBar))))
+                .addPath(scorePreload)
                 .addTemporalCallback(0, ()->{
-                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO,1 );
-                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO, 1);
-                    deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
 
                 })
                 .build();
@@ -99,18 +98,29 @@ public class RightAutoV9 extends LinearOpMode {
             telemetry.addLine("\t Heading: " + Math.toDegrees(follower.getPose().getHeading()));
             telemetry.addLine("\t Heading (poseUpdater): " + Math.toDegrees(poseUpdater.getPose().getHeading()));
             if(step == 1){
-                if(!trajFollowed) {
-                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                    follower.followPath(scorePreloadChain, true);
-                    trajFollowed = true;
-                    stepTimer.reset();
-                }
-                if(!follower.isBusy()) {
-                    if(stepTimer.seconds() > 1) {
-                        follower.breakFollowing();
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO,1 );
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO, 1);
+                deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
+                if(stepTimer.seconds() > 2) {
+                    if (!trajFollowed) {
+                        follower.followPath(scorePreloadChain, true);
+                        trajFollowed = true;
                         stepTimer.reset();
-                        step = 2;
-                        trajFollowed = false;
+                    }
+                    if (!follower.isBusy()) {
+                        if (stepTimer.seconds() > 1 && stepTimer.seconds() < 3) {
+                            deliveryAxon.setPosition(constants.DELIVERY_HOOK);
+                        }
+                        if(stepTimer.seconds() > 3 && stepTimer.seconds() < 5) {
+                            deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                            stepTimer.reset();
+                            step = 2;
+                            trajFollowed = false;
+                        }
+                    }
+                    else {
+                        stepTimer.reset();
                     }
                 }
             }

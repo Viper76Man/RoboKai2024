@@ -12,11 +12,14 @@ public class IntakeSlidesV1 {
         this.intakeSlides.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.intakeSlides.setPower(0);
         this.power = 0;
-        this.intakeSlides.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         this.intakeSlides.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.intakeSlides.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+    public void resetSlides(){
+        this.intakeSlides.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.intakeSlides.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+    }
     public void intakeOut(){
         intakeSlides.setPower(1);
         intakeSlides.setTargetPosition(362);
