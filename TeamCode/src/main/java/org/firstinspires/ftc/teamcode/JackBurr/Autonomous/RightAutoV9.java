@@ -106,7 +106,7 @@ public class RightAutoV9 extends LinearOpMode {
                     }
                     if (!follower.isBusy()) {
                         if (stepTimer.seconds() > 1 && stepTimer.seconds() < 3) {
-                            deliveryAxon.setPosition(constants.DELIVERY_HOOK);
+                            //deliveryAxon.setPosition(constants.DELIVERY_HOOK);
                         }
                         if(stepTimer.seconds() > 3 && stepTimer.seconds() < 5) {
                             deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
