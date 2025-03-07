@@ -42,6 +42,7 @@ public class SpecimenAuto extends OpMode {
     public DeliveryGrippersV1 deliveryGrippers = new DeliveryGrippersV1();
     public RobotConstantsV1 constants = new RobotConstantsV1();
     public boolean pathStateSet = false;
+    public boolean actionStateSet = false;
     public boolean pathStateSet2 = false;
     /*State machine for pathing */
     public enum PathState{
@@ -190,16 +191,8 @@ public class SpecimenAuto extends OpMode {
                 }
                 break;
             case HANG_PRELOAD:
-                pathStateSet2 = false;
-                pathStateSet = false;
-                if(pathState == PathState.GO_TO_SUBMERSIBLE && !follower.isBusy()) {
-                    if (actionTimer.seconds() < 2) {
-                        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
-                    } else {
-                        setActionState(ActionState.TRAVEL);
-                    }
-                    break;
-                }
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                break;
             case TRAVEL:
                 slides.runLeftSlideToPosition(0, 1);
                 slides.runRightSlideToPosition(0, 1);
@@ -214,11 +207,12 @@ public class SpecimenAuto extends OpMode {
                 if(!follower.isBusy()){
                     follower.followPath(scorePreload);
                     setPathState(PathState.RELEASE_AND_BACK);
-                    setActionState(ActionState.HANG_PRELOAD);
+                    actionTimer.reset();
                 }
                 break;
             case RELEASE_AND_BACK:
-                if(actionTimer.seconds() > 2) {
+                if(actionTimer.seconds() > 4) {
+                    setActionState(ActionState.HANG_PRELOAD);
                     /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                     if (!follower.isBusy()) {
                         /* Score Sample */
@@ -230,10 +224,12 @@ public class SpecimenAuto extends OpMode {
                 }
             case PUSH_SAMPLE1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                setActionState(ActionState.TRAVEL);
                 if(!follower.isBusy()) {
                     /* Score Sample */
-
+                    if(!actionStateSet){
+                        setActionState(ActionState.TRAVEL);
+                        actionStateSet = true;
+                    }
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(pushSample1,true);
                     setPathState(PathState.STRAFE_BEHIND_SAMPLE2);
