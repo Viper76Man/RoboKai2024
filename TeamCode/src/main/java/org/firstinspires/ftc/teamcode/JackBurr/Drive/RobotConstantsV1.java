@@ -27,14 +27,14 @@ public class RobotConstantsV1 {
     public double FRONT_LEFT_OVER_LOW_BAR = 0.25;
     public double FRONT_RIGHT_OVER_LOW_BAR = 0.25;
     public double DELIVERY_DOWN = 1;
-    public double DELIVERY_GRAB = 0.105; // 0.16
-    public double DELIVERY_LEVEL_ONE_ASCENT = 0.5; //0.51
-    public double DELIVERY_LEVEL_TWO_ASCENT = 0.555; //0.61
-    public double DELIVERY_UP = 0.555; //0.61
-    public double DELIVERY_DROP = 0.585; //0.64
-    public double DELIVERY_HIGH_BAR = 0.56; //0.63
-    public double DELIVERY_HOOK = 0.76;
-    public double DELIVERY_WALL_PICKUP = 0.755; //0.81
+    public double DELIVERY_GRAB = 0.02; // 0.105 (-0.085)
+    public double DELIVERY_LEVEL_ONE_ASCENT = 0.415; //0.5
+    public double DELIVERY_LEVEL_TWO_ASCENT = 0.47; //0.555
+    public double DELIVERY_UP = 0.47; //0.555
+    public double DELIVERY_DROP = 0.50; //0.585
+    public double DELIVERY_HIGH_BAR = 0.475; //0.56
+    public double DELIVERY_HOOK = 0.675; //0.76
+    public double DELIVERY_WALL_PICKUP = 0.69; //0.755
     public double WRIST_CENTER = 0.21;
     //MOTORS=========================================================================================================
     public int INTAKE_MOTOR_IN = 3;
@@ -46,8 +46,8 @@ public class RobotConstantsV1 {
     public int RIGHT_SLIDE_LOW_BASKET = 1582;
     public int LEFT_SLIDE_HIGH_BAR = -468;
     public int RIGHT_SLIDE_HIGH_BAR = 468;
-    public int LEFT_SLIDE_HIGH_BAR_AUTO = -644;
-    public int RIGHT_SLIDE_HIGH_BAR_AUTO = 644;
+    public int LEFT_SLIDE_HIGH_BAR_AUTO = -468;
+    public int RIGHT_SLIDE_HIGH_BAR_AUTO = 468;
     public int LEFT_SLIDE_LEVEL_TWO_ASCENT = -3370;
     public int RIGHT_SLIDE_LEVEL_TWO_ASCENT = 3370;
     public int LEFT_SLIDE_LEVEL_TWO_ASCENT_HOOK = -629;

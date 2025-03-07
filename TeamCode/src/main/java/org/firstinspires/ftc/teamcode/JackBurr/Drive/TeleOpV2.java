@@ -209,10 +209,10 @@ public class TeleOpV2 extends OpMode {
                     buttonTimer.reset();
                 }
                 if(deliverySlides.getLeftSlidePosition() != leftSlideDown) {
-                    deliverySlides.runLeftSlideToPositionPID(leftSlideDown);
+                    deliverySlides.runLeftSlideToPosition(leftSlideDown, 1);
                 }
                 if(deliverySlides.getRightSlidePosition()!= rightSlideDown) {
-                    deliverySlides.runRightSlideToPositionPID(rightSlideDown);
+                    deliverySlides.runRightSlideToPosition(rightSlideDown, 1);
                 }
                 if(slidesResetTimer.seconds() > 1){
                     intakeSlides.intakeIn();
@@ -240,13 +240,13 @@ public class TeleOpV2 extends OpMode {
                     state = SystemStatesV1.START;
                     buttonTimer.reset();
                 }
-                deliverySlides.runLeftSlideToPositionPID(0);
-                deliverySlides.runRightSlideToPositionPID(0);
+                deliverySlides.runLeftSlideToPosition(0,1 );
+                deliverySlides.runRightSlideToPosition(0,1 );
                 deliveryAxon.setPosition(constants.DELIVERY_WALL_PICKUP);
                 break;
             case LIFT_FROM_WALL:
-                deliverySlides.runLeftSlideToPositionPID(leftSlideHighBar);
-                deliverySlides.runRightSlideToPositionPID(rightSlideHighBar);
+                deliverySlides.runLeftSlideToPosition(leftSlideHighBar, 1);
+                deliverySlides.runRightSlideToPosition(rightSlideHighBar, 1);
                 if(gamepad1.y && buttonTimer.seconds() > 0.3){
                     state = SystemStatesV1.GRAB_OFF_WALL;
                     buttonTimer.reset();
@@ -258,8 +258,8 @@ public class TeleOpV2 extends OpMode {
                     state = SystemStatesV1.START;
                     buttonTimer.reset();
                 }
-                deliverySlides.runLeftSlideToPositionPID(leftSlideHighBar);
-                deliverySlides.runRightSlideToPositionPID(rightSlideHighBar);
+                deliverySlides.runLeftSlideToPosition(leftSlideHighBar, 1);
+                deliverySlides.runRightSlideToPosition(rightSlideHighBar, 1);
                 deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
                 if(gamepad1.dpad_right && buttonTimer.seconds() > 0.3){
                     deliveryAxon.setPosition(deliveryAxon.getPosition() + 0.05);
@@ -494,8 +494,8 @@ public class TeleOpV2 extends OpMode {
                     buttonTimer.reset();
                 }
 
-                deliverySlides.runLeftSlideToPositionPID(leftSlideHighBasket);
-                deliverySlides.runRightSlideToPositionPID(rightSlideHighBasket);
+                deliverySlides.runLeftSlideToPosition(leftSlideHighBasket,1 );
+                deliverySlides.runRightSlideToPosition(rightSlideHighBasket,1);
                 deliveryGrippersClosed = false;
                 deliveryAxon.setPosition(constants.DELIVERY_UP);
                 slidesReset = false;
@@ -507,8 +507,8 @@ public class TeleOpV2 extends OpMode {
                     buttonTimer.reset();
                 }
 
-                deliverySlides.runLeftSlideToPositionPID(constants.LEFT_SLIDE_LOW_BASKET);
-                deliverySlides.runRightSlideToPositionPID(constants.RIGHT_SLIDE_LOW_BASKET);
+                deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_LOW_BASKET, 1);
+                deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_LOW_BASKET,1);
                 deliveryGrippersClosed = false;
                 deliveryAxon.setPosition(constants.DELIVERY_UP);
                 slidesReset = false;
@@ -532,8 +532,8 @@ public class TeleOpV2 extends OpMode {
                 //}
                 break;
             case READY_FOR_LEVEL_TWO_ASCENT:
-                deliverySlides.runLeftSlideToPositionPID(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT);
-                deliverySlides.runRightSlideToPositionPID(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT);
+                deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT,1 );
+                deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT, 1);
                 deliveryAxon.setPosition(constants.DELIVERY_LEVEL_TWO_ASCENT);
                 break;
             case LEVEL_TWO_ASCENT:
