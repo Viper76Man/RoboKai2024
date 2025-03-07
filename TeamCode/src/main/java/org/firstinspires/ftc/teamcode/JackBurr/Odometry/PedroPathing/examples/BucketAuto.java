@@ -118,7 +118,7 @@ public class BucketAuto extends OpMode {
                     slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET, 1);
                     slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET, 1);
                 })
-                .addTemporalCallback(20, ()->{
+                .addTemporalCallback(3000, ()->{
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
                 })
                 .build();
@@ -215,14 +215,11 @@ public class BucketAuto extends OpMode {
                     stateTimer.reset();
                     pathFollowed = true;
                 }
-                if(follower.isBusy() && stateTimer.seconds() > 0.2){
+                if(follower.isBusy() && stateTimer.seconds() > 2){
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
                 }
                 if(pathFollowed && !follower.isBusy()) {
-                    if(stateTimer.seconds() < 2){
-                        deliveryAxon.setPosition(constants.DELIVERY_UP);
-                    }
-                    if (stateTimer.seconds() < 3 && stateTimer.seconds() > 2){
+                    if (stateTimer.seconds() < 3 && stateTimer.seconds() > 2.25){
                         deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                     }
                     if (stateTimer.seconds() < 4.25 && stateTimer.seconds() > 3){
@@ -433,6 +430,8 @@ public class BucketAuto extends OpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
+        pathTimer.resetTimer();
+        stateTimer.reset();
         deliveryGrippers.init(hardwareMap, telemetry);
         deliveryAxon.init(hardwareMap);
         diffV2.init(hardwareMap, telemetry);
@@ -445,18 +444,23 @@ public class BucketAuto extends OpMode {
         Constants.setConstants(FConstantsLeft.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
+        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+        deliveryAxon.setPosition(constants.DELIVERY_GRAB);
         buildPaths();
     }
 
     /** This method is called continuously after Init while waiting for "play". **/
     @Override
-    public void init_loop() {}
+    public void init_loop() {
+    }
 
     /** This method is called once at the start of the OpMode.
      * It runs all the setup actions, including building paths and starting the path system **/
     @Override
     public void start() {
         opmodeTimer.resetTimer();
+        stateTimer.reset();
+        pathTimer.resetTimer();
         setPathState(0);
     }
 
