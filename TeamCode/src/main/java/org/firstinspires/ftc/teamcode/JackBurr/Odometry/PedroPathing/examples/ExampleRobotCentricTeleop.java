@@ -1,14 +1,12 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.examples;
 
-import android.provider.SyncStateContract;
-
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.util.Constants;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstants;
+import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstantsLeft;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.LConstants;
 
 /**
@@ -26,7 +24,7 @@ public class ExampleRobotCentricTeleop extends OpMode {
     /** This method is call once when init is played, it initializes the follower **/
     @Override
     public void init() {
-        Constants.setConstants(FConstants.class,LConstants.class);
+        Constants.setConstants(FConstantsLeft.class,LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
     }

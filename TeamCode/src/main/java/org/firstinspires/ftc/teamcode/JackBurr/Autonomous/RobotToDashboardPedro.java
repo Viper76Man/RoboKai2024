@@ -62,7 +62,7 @@ public class RobotToDashboardPedro extends OpMode {
     @Override
     public void init() {
         startPose = new Pose(startX, startY, Math.toRadians(degrees));
-        Constants.setConstants(FConstants.class, LConstants.class);
+        Constants.setConstants(FConstantsLeft.class, LConstants.class);
         poseUpdater = new PoseUpdater(hardwareMap);
         poseUpdater.setPose(startPose);
 

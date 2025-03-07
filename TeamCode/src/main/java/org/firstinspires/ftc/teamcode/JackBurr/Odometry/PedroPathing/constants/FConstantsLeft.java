@@ -2,11 +2,9 @@ package org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants;
 
 import com.pedropathing.localization.Localizers;
 import com.pedropathing.follower.FollowerConstants;
-import com.pedropathing.util.CustomFilteredPIDFCoefficients;
-import com.pedropathing.util.CustomPIDFCoefficients;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-public class FConstants {
+public class FConstantsLeft {
     static {
         FollowerConstants.localizers = Localizers.PINPOINT;
 

@@ -8,7 +8,6 @@ import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
-import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -16,7 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotConstantsV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
-import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstants;
+import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstantsLeft;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.LConstants;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
@@ -42,11 +41,13 @@ public class SpecimenAuto extends OpMode {
     public DeliverySlidesV1 slides = new DeliverySlidesV1();
     public DeliveryGrippersV1 deliveryGrippers = new DeliveryGrippersV1();
     public RobotConstantsV1 constants = new RobotConstantsV1();
-
+    public boolean pathStateSet = false;
+    public boolean pathStateSet2 = false;
     /*State machine for pathing */
     public enum PathState{
         START,
         GO_TO_SUBMERSIBLE,
+        RELEASE_AND_BACK,
         STRAFE_OUT,
         STRAFE_BEHIND_SAMPLE1,
         PUSH_SAMPLE1,
@@ -73,6 +74,7 @@ public class SpecimenAuto extends OpMode {
     public enum ActionState{
         DELIVERY_POSITION,
         HANG_PRELOAD,
+        TRAVEL,
         PICK_UP_SPECIMEN_1,
         DELIVERY_POSITION_1,
         HANG_SPECIMEN_1,
@@ -84,11 +86,12 @@ public class SpecimenAuto extends OpMode {
         HANG_SPECIMEN_3,
 
     }
-    public PathState pathState = PathState.GO_TO_SUBMERSIBLE;
+    public PathState pathState = PathState.START;
     public ActionState actionState = ActionState.DELIVERY_POSITION;
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(9, 63, Math.toRadians(180));
-    private final Pose tosubmersiblePose = new Pose(35, 63, Math.toRadians(180));
+    private final Pose tosubmersiblePose = new Pose(39, 63, Math.toRadians(180));
+    private final Pose releaseAndBackPose = new Pose(9, 63, Math.toRadians(180));
     private final Pose strafeoutPose = new Pose(33, 36, Math.toRadians(180));
     private final Pose strafeoutbehindSample1ControlPoint = new Pose(65, 41, Math.toRadians(180));
     private final Pose strafebehindsample1Pose = new Pose(60, 30, Math.toRadians(180));
@@ -114,7 +117,7 @@ public class SpecimenAuto extends OpMode {
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    public Path scorePreload, pushSample01, strafeOut, strafeBehindSample1;
+    public Path scorePreload, pushSample01, strafeOut, strafeBehindSample1, releaseAndBack;
     public PathChain strafeout, strafebehindsample1, pushSample1, backwardsFromSample1, strafeBehindSample2, pushSample2, positionSpecimenPickup, pickUpSpecimen1, toSubmersible1, forwardToSubmersible1, backwardsFromSubmersible1, pickUpSpecimen2, strafeToSubmersible2, forwardToSubmersible2, backwardsFromSubmersible2, pickUpSpecimen3, strafeToSubmersible3, forwardToSubmersible4, backwardsFromSubmersible3, strafeToPark;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
@@ -128,7 +131,8 @@ public class SpecimenAuto extends OpMode {
 
         /* Here is an example for Constant Interpolation
         scorePreload.setConstantInterpolation(startPose.getHeading()); */
-
+        releaseAndBack = new Path(new BezierLine(new Point(tosubmersiblePose), new Point(releaseAndBackPose)));
+        releaseAndBack.setLinearHeadingInterpolation(tosubmersiblePose.getHeading(), releaseAndBackPose.getHeading());
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         strafeOut = new Path(new BezierLine(new Point(tosubmersiblePose), new Point(strafeoutPose)));
         strafeOut.setLinearHeadingInterpolation(tosubmersiblePose.getHeading(), strafeoutPose.getHeading());
@@ -173,24 +177,60 @@ public class SpecimenAuto extends OpMode {
                     deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
                     slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO, 1);
                     slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO, 1);
+                    if(!pathStateSet){
+                        setPathState(PathState.START);
+                        pathStateSet = true;
+                    }
                 }
                 else {
-                    pathState = PathState.GO_TO_SUBMERSIBLE;
-                    actionState = ActionState.HANG_PRELOAD;
+                    if(!pathStateSet2) {
+                        setPathState(PathState.GO_TO_SUBMERSIBLE);
+                        pathStateSet2 = true;
+                    }
                 }
                 break;
-
+            case HANG_PRELOAD:
+                pathStateSet2 = false;
+                pathStateSet = false;
+                if(pathState == PathState.GO_TO_SUBMERSIBLE && !follower.isBusy()) {
+                    if (actionTimer.seconds() < 2) {
+                        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                    } else {
+                        setActionState(ActionState.TRAVEL);
+                    }
+                    break;
+                }
+            case TRAVEL:
+                slides.runLeftSlideToPosition(0, 1);
+                slides.runRightSlideToPosition(0, 1);
+                deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                break;
         }
     }
 
     public void autonomousPathUpdate() {
         switch (pathState) {
             case GO_TO_SUBMERSIBLE:
-                follower.followPath(scorePreload);
-                setPathState(PathState.PUSH_SAMPLE1);
+                if(!follower.isBusy()){
+                    follower.followPath(scorePreload);
+                    setPathState(PathState.RELEASE_AND_BACK);
+                    setActionState(ActionState.HANG_PRELOAD);
+                }
                 break;
+            case RELEASE_AND_BACK:
+                if(actionTimer.seconds() > 2) {
+                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                    if (!follower.isBusy()) {
+                        /* Score Sample */
+                        /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                        follower.followPath(releaseAndBack, true);
+                        setPathState(PathState.PUSH_SAMPLE1);
+                    }
+                    break;
+                }
             case PUSH_SAMPLE1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                setActionState(ActionState.TRAVEL);
                 if(!follower.isBusy()) {
                     /* Score Sample */
 
@@ -252,6 +292,10 @@ public class SpecimenAuto extends OpMode {
         pathTimer.reset();
     }
 
+    public void setActionState(ActionState aState) {
+        actionState = aState;
+        actionTimer.reset();
+    }
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
     @Override
     public void loop() {
@@ -259,7 +303,7 @@ public class SpecimenAuto extends OpMode {
         // These loop the movements of the robot
         follower.update();
         autonomousPathUpdate();
-        //autonomousActionUpdate();
+        autonomousActionUpdate();
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
@@ -284,7 +328,7 @@ public class SpecimenAuto extends OpMode {
         diffV2.init(hardwareMap, telemetry);
         grippers.init(hardwareMap, telemetry);
         wrist.init(hardwareMap);
-        Constants.setConstants(FConstants.class, LConstants.class);
+        Constants.setConstants(FConstantsLeft.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();
@@ -301,7 +345,6 @@ public class SpecimenAuto extends OpMode {
         opmodeTimer.reset();
         actionTimer.reset();
         pathTimer.reset();
-        setPathState(PathState.GO_TO_SUBMERSIBLE);
     }
 
     /** We do not use this because everything should automatically disable **/
