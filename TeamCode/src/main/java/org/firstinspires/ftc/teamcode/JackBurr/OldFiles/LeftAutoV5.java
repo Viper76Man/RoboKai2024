@@ -10,6 +10,7 @@ import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -22,7 +23,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
-
+@Disabled
 @Config
 @Autonomous
 public class LeftAutoV5 extends LinearOpMode {

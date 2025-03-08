@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -15,7 +16,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 //import org.firstinspires.ftc.teamcode.JackBurr.Odometry.Roadrunner.PinpointDrive;
-
+@Disabled
 @Autonomous
 public class RightAutoV5 extends LinearOpMode {
     public int step = 1;

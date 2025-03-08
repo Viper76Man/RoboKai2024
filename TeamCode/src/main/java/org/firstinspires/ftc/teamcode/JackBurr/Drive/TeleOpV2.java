@@ -538,12 +538,12 @@ public class TeleOpV2 extends OpMode {
                 break;
             case LEVEL_TWO_ASCENT:
                 if(deliverySlides.getLeftSlidePosition() != leftSlideDown || deliverySlides.getRightSlidePosition() != leftSlideDown) {
-                    deliverySlides.runLeftSlideToPosition(leftSlideDown, 1);
-                    deliverySlides.runRightSlideToPosition(rightSlideDown, 1);
+                    deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_HANG, 1);
+                    deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_HANG, 1);
                 }
                 else if(deliverySlides.getLeftSlidePosition() != 0 && deliverySlides.getRightSlidePosition() != 0){
-                    deliverySlides.runLeftSlideToPosition(leftSlideDown, 1);
-                    deliverySlides.runRightSlideToPosition(rightSlideDown, 1);
+                    deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_HANG, 1);
+                    deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_HANG, 1);
                 }
                 if(!intakeSlides.isAllTheWayIn()) {
                     intakeSlides.intakeAllTheWayIn();

@@ -10,6 +10,7 @@ import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -33,9 +34,9 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
  * @author Baron Henderson - 20077 The Indubitables
  * @version 2.0, 11/28/2024
  */
-
-@Autonomous(name = "Sample Auto", group = "Coach")
-public class BucketAuto extends OpMode {
+@Disabled
+@Autonomous(name = "Sample Auto (FSM)", group = "Coach")
+public class BucketAutoDualFSM extends OpMode {
 
     public DeliveryGrippersV1 deliveryGrippers = new DeliveryGrippersV1();
     public DeliveryAxonV1 deliveryAxon = new DeliveryAxonV1();
@@ -51,9 +52,29 @@ public class BucketAuto extends OpMode {
     public ElapsedTime stateTimer = new ElapsedTime();
     public boolean pathFollowed = false;
 
+    public enum PathStates {
+        START,
+        DELIVER_PRELOAD,
+        PICKUP_1,
+        DELIVERY_1,
+        PICKUP_2,
+        DELIVERY_2,
+        LEVEL_1_ASCENT,
+        DONE
+    }
+
+    public enum ActionStates {
+        START,
+        DELIVERY_1,
+        PICKUP_1,
+        DELIVERY_2,
+        PICKUP_2,
+        LEVEL_1_ASCENT,
+        DONE
+    }
+
     /** This is the variable where we store the state of our auto.
      * It is used by the pathUpdate method. */
-    private int pathState;
 
     /* Create and Define Poses + Paths
      * Poses are built with three constructors: x, y, and heading (in Radians).
@@ -68,7 +89,7 @@ public class BucketAuto extends OpMode {
     private final Pose startPose = new Pose(9, 111, Math.toRadians(270));
 
     /** Scoring Pose of our robot. It is facing the submersible at a -45 degree (315 degree) angle. */
-    private final Pose scorePose = new Pose(20, 124, Math.toRadians(315));
+    private final Pose scorePose = new Pose(19, 125, Math.toRadians(315));
 
     /** Lowest (First) Sample from the Spike Mark */
     private final Pose pickup1Pose = new Pose(24, 121, Math.toRadians(0));
@@ -89,6 +110,9 @@ public class BucketAuto extends OpMode {
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private Path scorePreload, park;
     private PathChain scorePreloadChain, parkChain, grabPickup1, grabPickup2, grabPickup3, scorePickup1, scorePickup2, scorePickup3;
+
+    public PathStates pathState;
+    public ActionStates actionState;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -208,12 +232,15 @@ public class BucketAuto extends OpMode {
      * The followPath() function sets the follower to run the specific path, but does NOT wait for it to finish before moving on. */
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0:
+            case DELIVER_PRELOAD:
                 wrist.setPosition(constants.WRIST_CENTER);
                 if(!pathFollowed){
                     follower.followPath(scorePreloadChain);
                     stateTimer.reset();
                     pathFollowed = true;
+                }
+                if(follower.isBusy() && stateTimer.seconds() > 2){
+                    deliveryAxon.setPosition(constants.DELIVERY_UP);
                 }
                 if(pathFollowed && !follower.isBusy()) {
                     if (stateTimer.seconds() < 3 && stateTimer.seconds() > 2.25){
@@ -223,18 +250,13 @@ public class BucketAuto extends OpMode {
                         deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                     }
                     if(stateTimer.seconds() > 4.25) {
-                        setPathState(1);
+                        setPathState(PathStates.PICKUP_1);
                         stateTimer.reset();
                         pathFollowed = false;
                     }
                 }
-                else if(pathFollowed){
-                    if((Math.abs(slides.getLeftSlidePosition()) > Math.abs(constants.LEFT_SLIDE_HIGH_BASKET / 2)) && (Math.abs(slides.getRightSlidePosition()) > Math.abs(constants.RIGHT_SLIDE_HIGH_BASKET / 2))) {
-                        deliveryAxon.setPosition(constants.DELIVERY_UP);
-                    }
-                }
                 break;
-            case 1:
+            case PICKUP_1:
 
                 /* You could check for
                 - Follower State: "if(!follower.isBusy() {}"
@@ -273,13 +295,13 @@ public class BucketAuto extends OpMode {
                         }
                     }
                     else if(stateTimer.seconds() > 6) {
-                        setPathState(2);
+                        setPathState(PathStates.DELIVERY_1);
                         stateTimer.reset();
                         pathFollowed = false;
                     }
                 }
                 break;
-            case 2:
+            case DELIVERY_1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
                 if(!follower.isBusy()) {
                     /* Grab Sample */
@@ -302,14 +324,14 @@ public class BucketAuto extends OpMode {
                         }
                         if(stateTimer.seconds() > 3.75) {
                             deliveryAxon.setPosition(constants.DELIVERY_GRAB);
-                            setPathState(3);
+                            setPathState(PathStates.PICKUP_2);
                             stateTimer.reset();
                             pathFollowed = false;
                         }
                     }
                 }
                 break;
-            case 3:
+            case PICKUP_2:
                 if(!follower.isBusy()) {
                     /* Score Preload */
                     deliveryAxon.setPosition(constants.DELIVERY_GRAB);
@@ -342,13 +364,13 @@ public class BucketAuto extends OpMode {
                         }
                     }
                     else if(stateTimer.seconds() > 6) {
-                        setPathState(4);
+                        setPathState(PathStates.DELIVERY_2);
                         stateTimer.reset();
                         pathFollowed = false;
                     }
                 }
                 break;
-            case 4:
+            case DELIVERY_2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
                 if(!follower.isBusy()) {
                     wrist.setPosition(constants.WRIST_CENTER);
@@ -374,14 +396,14 @@ public class BucketAuto extends OpMode {
                             slides.runRightSlideToPosition(0, 1);
                         }
                         if (stateTimer.seconds() > 6) {
-                            setPathState(5);
+                            setPathState(PathStates.LEVEL_1_ASCENT);
                             stateTimer.reset();
                             pathFollowed = false;
                         }
                     }
                 }
                 break;
-            case 5:
+            case LEVEL_1_ASCENT:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Sample */
@@ -392,10 +414,10 @@ public class BucketAuto extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(parkChain,true);
                     deliveryAxon.setPosition(constants.DELIVERY_LEVEL_ONE_ASCENT);
-                    setPathState(6);
+                    setPathState(PathStates.DONE);
                 }
                 break;
-            case 6:
+            case DONE:
                 deliveryAxon.setPosition(constants.DELIVERY_LEVEL_ONE_ASCENT);
                 break;
         }
@@ -403,7 +425,7 @@ public class BucketAuto extends OpMode {
 
     /** These change the states of the paths and actions
      * It will also reset the timers of the individual switches **/
-    public void setPathState(int pState) {
+    public void setPathState(PathStates pState) {
         pathState = pState;
         pathTimer.resetTimer();
     }
@@ -446,7 +468,7 @@ public class BucketAuto extends OpMode {
         Constants.setConstants(FConstantsLeft.class, LConstants.class);
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
-        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_GRAB);
+        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
         deliveryAxon.setPosition(constants.DELIVERY_GRAB);
         buildPaths();
     }
@@ -463,7 +485,7 @@ public class BucketAuto extends OpMode {
         opmodeTimer.resetTimer();
         stateTimer.reset();
         pathTimer.resetTimer();
-        setPathState(0);
+        setPathState(PathStates.DELIVER_PRELOAD);
     }
 
     /** We do not use this because everything should automatically disable **/

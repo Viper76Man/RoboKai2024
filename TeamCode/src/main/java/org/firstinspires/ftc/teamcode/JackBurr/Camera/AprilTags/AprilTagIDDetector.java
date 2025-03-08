@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Camera.AprilTags;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -12,7 +13,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.text.DecimalFormat;
 import java.util.List;
-
+@Disabled
 @Autonomous
 public class AprilTagIDDetector extends OpMode {
     public OpenCvWebcam camera;

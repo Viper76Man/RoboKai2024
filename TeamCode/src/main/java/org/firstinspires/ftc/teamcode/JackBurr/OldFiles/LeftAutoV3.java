@@ -6,6 +6,7 @@ package org.firstinspires.ftc.teamcode.JackBurr.OldFiles;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotConstantsV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
-
+@Disabled
 @Autonomous
 public class LeftAutoV3 extends LinearOpMode {
     public DeliverySlidesV1 slides = new DeliverySlidesV1();

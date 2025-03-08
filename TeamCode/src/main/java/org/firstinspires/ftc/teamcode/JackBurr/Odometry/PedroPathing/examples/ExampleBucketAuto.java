@@ -10,6 +10,7 @@ import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstantsLeft;
@@ -24,7 +25,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.L
  * @author Baron Henderson - 20077 The Indubitables
  * @version 2.0, 11/28/2024
  */
-
+@Disabled
 @Autonomous(name = "Example Auto Blue", group = "Examples")
 public class ExampleBucketAuto extends OpMode {
 

@@ -12,7 +12,7 @@ public class RobotConstantsV1 {
     public double GRIPPERS_CLOSE = 0;
     public double GRIPPERS_GRAB = 0.05;
     public double DELIVERY_GRIPPERS_CLOSE = 0.9;
-    public double DELIVERY_GRIPPERS_GRAB = 0.47;
+    public double DELIVERY_GRIPPERS_GRAB = 0.6;
     public double DELIVERY_GRIPPERS_OPEN = 0.25;
     //===============================================================================================================
     //SERVOS=========================================================================================================
@@ -54,6 +54,9 @@ public class RobotConstantsV1 {
     public int RIGHT_SLIDE_LEVEL_TWO_ASCENT = 3370;
     public int LEFT_SLIDE_LEVEL_TWO_ASCENT_HOOK = -629;
     public int RIGHT_SLIDE_LEVEL_TWO_ASCENT_HOOK = 629;
+    public int LEFT_SLIDE_HANG = -2200;
+    public int RIGHT_SLIDE_HANG = 2200;
+
     //CAMERA========================================================================================================
     public static double sampleAngle = 0;
     //==============================================================================================================

@@ -6,8 +6,9 @@ import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
+@Disabled
 @Autonomous
 public class RRBenchmarkTest extends LinearOpMode {
     public static Pose2d startPose = new Pose2d(36, 62, Math.toRadians(-90)); // (60,0), 180

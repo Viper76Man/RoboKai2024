@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.JackBurr.Camera.AprilTags;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -22,7 +23,7 @@ import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Disabled
 @Autonomous
 public class AprilTagsWithDashboard extends OpMode {
     public OpenCvWebcam camera;

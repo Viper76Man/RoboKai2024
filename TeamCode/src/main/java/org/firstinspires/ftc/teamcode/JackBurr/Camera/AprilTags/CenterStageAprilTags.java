@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Camera.AprilTags;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -16,7 +17,7 @@ import org.opencv.core.Mat;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import java.util.ArrayList;
 import java.util.List;
-
+@Disabled
 @Autonomous
 public class CenterStageAprilTags extends OpMode {
     private AprilTagProcessor aprilTagProcessor;
