@@ -98,7 +98,7 @@ public class SpecimenAutoV3 extends OpMode {
     public final Pose strafeBehind1 = new Pose (60, 36, Math.toRadians(180));
     private final Pose strafebehindsample1Pose = new Pose(60, 25, Math.toRadians(180));
     private final Pose pushsample1Pose = new Pose(13, 25, Math.toRadians(180));
-    private final Pose straightBack = new Pose(60, 25, Math.toRadians(180));
+    private final Pose straightBack = new Pose(20, 25, Math.toRadians(180));
     private final Pose strafebehindsample2Pose = new Pose(60, 15, Math.toRadians(180));
     private final Pose pushsample2Pose = new Pose(13, 15, Math.toRadians(180));
     private final Pose positionspecimenpickupPose = new Pose(36, 15, Math.toRadians(180));
