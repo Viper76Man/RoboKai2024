@@ -2,7 +2,11 @@ package org.firstinspires.ftc.teamcode.JackBurr.Motors;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotConstantsV1;
+
 public class IntakeSlidesV1 {
+    public RobotConstantsV1 constants = new RobotConstantsV1();
     public HardwareMap hardwareMap;
     public DcMotor intakeSlides;
     public double power = 0;
@@ -22,19 +26,19 @@ public class IntakeSlidesV1 {
     }
     public void intakeOut(){
         intakeSlides.setPower(1);
-        intakeSlides.setTargetPosition(362);
+        intakeSlides.setTargetPosition(constants.INTAKE_OUT);
         intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void intakeOutAuto(){
         intakeSlides.setPower(1);
-        intakeSlides.setTargetPosition(102);
+        intakeSlides.setTargetPosition(constants.INTAKE_OUT_AUTO);
         intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void intakeIn(){
         intakeSlides.setPower(1);
-        intakeSlides.setTargetPosition(52);
+        intakeSlides.setTargetPosition(constants.INTAKE_IN);
         intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
@@ -46,7 +50,7 @@ public class IntakeSlidesV1 {
 
     public void intakeAllTheWayIn(){
         intakeSlides.setPower(1);
-        intakeSlides.setTargetPosition(-10);
+        intakeSlides.setTargetPosition(constants.INTAKE_ALL_THE_WAY_IN);
         intakeSlides.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 

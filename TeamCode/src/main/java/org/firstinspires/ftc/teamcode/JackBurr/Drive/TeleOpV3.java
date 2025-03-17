@@ -1,30 +1,22 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Drive;
 
-import androidx.annotation.ColorRes;
-
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.JackBurr.Camera.Limelight3A.LimelightV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
+import org.firstinspires.ftc.teamcode.JackBurr.Other.EncoderRange;
+import org.firstinspires.ftc.teamcode.JackBurr.Other.Range;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
-import org.opencv.imgproc.Imgproc;
+import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristServoTest;
 
-import java.util.ArrayList;
-import java.util.List;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import java.util.Optional;
 
 @TeleOp
 public class TeleOpV3 extends OpMode {
@@ -77,7 +69,6 @@ public class TeleOpV3 extends OpMode {
     public DeliveryAxonV1 deliveryAxon = new DeliveryAxonV1();
     public WristAxonV1 wrist = new WristAxonV1();
     public DeliverySlidesV1 deliverySlides = new DeliverySlidesV1();
-    public LimelightV1 limelightV1 = new LimelightV1();
     //TIMERS====================================================================================================================
     public ElapsedTime buttonTimer = new ElapsedTime();
     public ElapsedTime highBarTimer = new ElapsedTime();
@@ -106,8 +97,6 @@ public class TeleOpV3 extends OpMode {
     public boolean slowmode = false;
     public boolean waitForSlides = true;
     public boolean sampleTransferred = false;
-    public boolean areGrippersAligned = false;
-    public boolean limelightActivated = true;
     //VARIABLES=================================================================================================================
     public double timeNeeded = 0;
     public int leftSlideHighBar = constants.LEFT_SLIDE_HIGH_BAR;
@@ -116,6 +105,10 @@ public class TeleOpV3 extends OpMode {
     public int rightSlideHighBasket = constants.RIGHT_SLIDE_HIGH_BASKET;
     public int leftSlideDown = 0;
     public int rightSlideDown = 0;
+    //RANGES=====================================================================================================================
+    public EncoderRange deliveryGrippersRangeWithSample = new EncoderRange(constants.DELIVERY_GRIPPERS_WITH_SAMPLE, 5);
+    public EncoderRange deliveryAxonTarget = new EncoderRange(constants.DELIVERY_AXON_TARGET, 5);
+    public EncoderRange intakeAllTheWayInRange = new EncoderRange(constants.INTAKE_ALL_THE_WAY_IN, 3);
     @Override
     public void init() {
         //Motors =====================================================================================================
@@ -128,7 +121,6 @@ public class TeleOpV3 extends OpMode {
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         state = SystemStatesV1.START;
-        limelightV1.init(hardwareMap, telemetry);
         differentialV2.init(hardwareMap, telemetry);
         intakeSlides.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
@@ -139,8 +131,6 @@ public class TeleOpV3 extends OpMode {
         wrist.setPosition(constants.WRIST_CENTER);
         deliverySlides.init(hardwareMap);
         slidesState = SlidesState.IN;
-        limelightV1.setPipeline(0);
-        limelightV1.startStreaming();
         //===========================================================================================================
     }
 
@@ -151,7 +141,6 @@ public class TeleOpV3 extends OpMode {
         deliveryGrippersTimer.reset();
         diffTimer.reset();
         wrist.setPosition(constants.WRIST_CENTER);
-        limelightV1.limelight.start();
         //TODO: Try telemetry.setAutoClear(false);
     }
 
@@ -161,7 +150,6 @@ public class TeleOpV3 extends OpMode {
         double y = -gamepad1.left_stick_y; // Remember, this is reversed!
         double x = -gamepad1.left_stick_x; // Counteract imperfect strafing, if the back motors are facing downwards this should be negative
         double rx = -gamepad1.right_stick_x; //This is reversed for our turning
-        //telemetry.addLine("Limelight status: " + limelightV1.getStatus().getName());
         if(!slowmode) {
             drive(y, x, rx);
         }
@@ -169,10 +157,6 @@ public class TeleOpV3 extends OpMode {
             driveSlowMode(y,x,rx);
         }
         //SYSTEM_STATES====================================================================================================
-        if(gamepad1.right_trigger != 0 && buttonTimer.seconds() > 0.25){
-            toggleLimelight();
-        }
-
         if(state == SystemStatesV1.ARM_UP){
             timeNeeded = 2;
         }
@@ -198,17 +182,7 @@ public class TeleOpV3 extends OpMode {
 
         if(gamepad1.x && buttonTimer.seconds() > 0.3) {
             if(thisStateTimer.seconds() > timeNeeded) {
-                if(limelightActivated) {
-                    if (state == SystemStatesV1.HOVER_OVER_SAMPLE && rotateGrippersToSample()) {
-                        state = nextStateHighBasket();
-                    }
-                    else if(state != SystemStatesV1.HOVER_OVER_SAMPLE){
-                        state = nextStateHighBasket();
-                    }
-                }
-                else {
-                    state = nextStateHighBasket();
-                }
+                state = nextStateHighBasket();
                 if (state == SystemStatesV1.ARM_UP) {
                     grippersTimer.reset();
                 }
@@ -272,13 +246,13 @@ public class TeleOpV3 extends OpMode {
                     state = SystemStatesV1.START;
                     buttonTimer.reset();
                 }
-                deliverySlides.runLeftSlideToPosition(0, 0.8);
-                deliverySlides.runRightSlideToPosition(0, 0.8);
+                deliverySlides.runLeftSlideToPosition(0,1 );
+                deliverySlides.runRightSlideToPosition(0,1 );
                 deliveryAxon.setPosition(constants.DELIVERY_WALL_PICKUP);
                 break;
             case LIFT_FROM_WALL:
-                deliverySlides.runLeftSlideToPosition(leftSlideHighBar, 0.5);
-                deliverySlides.runRightSlideToPosition(rightSlideHighBar, 0.5);
+                deliverySlides.runLeftSlideToPosition(leftSlideHighBar, 1);
+                deliverySlides.runRightSlideToPosition(rightSlideHighBar, 1);
                 if(gamepad1.y && buttonTimer.seconds() > 0.3){
                     state = SystemStatesV1.GRAB_OFF_WALL;
                     buttonTimer.reset();
@@ -290,8 +264,8 @@ public class TeleOpV3 extends OpMode {
                     state = SystemStatesV1.START;
                     buttonTimer.reset();
                 }
-                deliverySlides.runLeftSlideToPosition(leftSlideHighBar, 0.8);
-                deliverySlides.runRightSlideToPosition(rightSlideHighBar, 0.8);
+                deliverySlides.runLeftSlideToPosition(leftSlideHighBar, 1);
+                deliverySlides.runRightSlideToPosition(rightSlideHighBar, 1);
                 deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
                 if(gamepad1.dpad_right && buttonTimer.seconds() > 0.3){
                     deliveryAxon.setPosition(deliveryAxon.getPosition() + 0.05);
@@ -318,18 +292,14 @@ public class TeleOpV3 extends OpMode {
                     state = SystemStatesV1.START;
                     buttonTimer.reset();
                 }
-                if(!limelightActivated) {
-                    if (gamepad1.left_bumper && buttonTimer.seconds() > 0.35) {
-                        wrist.moveLeft(0.2);
-                        buttonTimer.reset();
+                if (gamepad1.left_bumper && buttonTimer.seconds() > 0.35){
+                    wrist.moveLeft(0.2);
+                    buttonTimer.reset();
 
-                    } else if (gamepad1.right_bumper && buttonTimer.seconds() > 0.35) {
-                        wrist.moveRight(0.2);
-                        buttonTimer.reset();
-                    }
                 }
-                else {
-                    rotateGrippersToSample();
+                else if (gamepad1.right_bumper && buttonTimer.seconds() > 0.35){
+                    wrist.moveRight(0.2);
+                    buttonTimer.reset();
                 }
                 grippers.setPosition(constants.GRIPPERS_OPEN);
                 grippersClosed = false;
@@ -342,25 +312,9 @@ public class TeleOpV3 extends OpMode {
                 pickedUpSample = false;
                 break;
             case HOVER_OVER_SAMPLE:
-                if(limelightActivated) {
-                    telemetry.addLine("Limelight 3a");
-                    telemetry.addLine("\t FPS: " + limelightV1.getFps());
-                    telemetry.addLine("\t Sample angle: " + limelightV1.getAngle());
-                    rotateGrippersToSample();
-                }
-                else if (gamepad1.left_bumper && buttonTimer.seconds() > 0.35){
-                    wrist.moveLeft(0.1);
-                    buttonTimer.reset();
-
-                }
-                else if (gamepad1.right_bumper && buttonTimer.seconds() > 0.35){
-                    wrist.moveRight(0.1);
-                    buttonTimer.reset();
-                }
                 slowmode = true;
                 if(gamepad1.y && buttonTimer.seconds() > 0.3){
                     state = SystemStatesV1.HOVER_LOW;
-                    areGrippersAligned = false;
                     buttonTimer.reset();
                 }
                 if (gamepad1.left_bumper && buttonTimer.seconds() > 0.35){
@@ -383,13 +337,6 @@ public class TeleOpV3 extends OpMode {
                 pickedUpSample = false;
                 break;
             case DOWN_ON_SAMPLE:
-                telemetry.addLine("Limelight Activated: " + limelightActivated);
-                if(limelightActivated) {
-                    telemetry.addLine("Limelight 3a");
-                    telemetry.addLine("\t FPS: " + limelightV1.getFps());
-                    telemetry.addLine("\t Sample angle: " + limelightV1.getAngle());
-                    rotateGrippersToSample();
-                }
                 slowmode = true;
                 if(gamepad1.y && buttonTimer.seconds() > 0.3){
                     state = SystemStatesV1.START;
@@ -508,10 +455,11 @@ public class TeleOpV3 extends OpMode {
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 }
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
-                if(!deliveryTimerIsReset){
+                if(!deliveryTimerIsReset) {
                     deliveryGrippersTimer.reset();
                     deliveryTimerIsReset = true;
                 }
+                //TODO: HERE
                 if(deliveryGrippersTimer.seconds() <  0.3) {
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                     deliveryGrippersClosed = true;
@@ -553,8 +501,8 @@ public class TeleOpV3 extends OpMode {
                     buttonTimer.reset();
                 }
 
-                deliverySlides.runLeftSlideToPosition(leftSlideHighBasket, 1);
-                deliverySlides.runRightSlideToPosition(rightSlideHighBasket, 1);
+                deliverySlides.runLeftSlideToPosition(leftSlideHighBasket,1 );
+                deliverySlides.runRightSlideToPosition(rightSlideHighBasket,1);
                 deliveryGrippersClosed = false;
                 deliveryAxon.setPosition(constants.DELIVERY_UP);
                 slidesReset = false;
@@ -567,7 +515,7 @@ public class TeleOpV3 extends OpMode {
                 }
 
                 deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_LOW_BASKET, 1);
-                deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_LOW_BASKET, 1);
+                deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_LOW_BASKET,1);
                 deliveryGrippersClosed = false;
                 deliveryAxon.setPosition(constants.DELIVERY_UP);
                 slidesReset = false;
@@ -591,18 +539,18 @@ public class TeleOpV3 extends OpMode {
                 //}
                 break;
             case READY_FOR_LEVEL_TWO_ASCENT:
-                deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT, 0.8);
-                deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT, 0.8);
+                deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT,1 );
+                deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT, 1);
                 deliveryAxon.setPosition(constants.DELIVERY_LEVEL_TWO_ASCENT);
                 break;
             case LEVEL_TWO_ASCENT:
                 if(deliverySlides.getLeftSlidePosition() != leftSlideDown || deliverySlides.getRightSlidePosition() != leftSlideDown) {
-                    deliverySlides.runLeftSlideToPosition(leftSlideDown, 1);
-                    deliverySlides.runRightSlideToPosition(rightSlideDown, 1);
+                    deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_HANG, 1);
+                    deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_HANG, 1);
                 }
                 else if(deliverySlides.getLeftSlidePosition() != 0 && deliverySlides.getRightSlidePosition() != 0){
-                    deliverySlides.runLeftSlideToPosition(leftSlideDown, 1);
-                    deliverySlides.runRightSlideToPosition(rightSlideDown, 1);
+                    deliverySlides.runLeftSlideToPosition(constants.LEFT_SLIDE_HANG, 1);
+                    deliverySlides.runRightSlideToPosition(constants.RIGHT_SLIDE_HANG, 1);
                 }
                 if(!intakeSlides.isAllTheWayIn()) {
                     intakeSlides.intakeAllTheWayIn();
@@ -698,8 +646,12 @@ public class TeleOpV3 extends OpMode {
                     state = SystemStatesV1.EXTEND_AND_DROP;
                     buttonTimer.reset();
                 }
-                intakeSlides.intakeIn();
+                intakeSlides.intakeAllTheWayIn();
                 slidesTimer.reset();
+                grippersTimer.reset();
+                grippersOpened = false;
+                sampleTransferred = false;
+                pickedUpSample = false;
                 break;
             case EXTEND_AND_DROP:
                 if(gamepad1.triangle && buttonTimer.seconds() > 0.3){
@@ -722,9 +674,6 @@ public class TeleOpV3 extends OpMode {
 
         }
         telemetry.addLine("STATE: " + state.name());
-        telemetry.addLine("LIMELIGHT ANGLE: " + limelightV1.getAngle());
-        telemetry.addLine("LIMELIGHT STATUS: " + limelightV1.getStatus().getName());
-        telemetry.addLine("LIMELIGHT FPS: " + limelightV1.getStatus().getFps());
         telemetry.addLine("\t Intake grippers position: " + grippers.getPosition());
         telemetry.addLine("\t Intake slides power: " + intakeSlides.getPower());
         telemetry.addLine("\t Intake slides position: " + intakeSlides.getCurrentPosition());
@@ -733,11 +682,6 @@ public class TeleOpV3 extends OpMode {
         telemetry.addLine("\t Right Delivery Slide: " +  deliverySlides.getRightSlidePosition());
         telemetry.addLine("\t Left Delivery Slide Down Position: " +  leftSlideDown);
         telemetry.addLine("\t Right Delivery Slide Down Position: " +  rightSlideDown);
-        if(limelightV1.getLatestResult() != null) {
-            if (!limelightV1.getLatestResult().getColorResults().isEmpty()) {
-                telemetry.addLine("LIMELIGHT COLOR RESULTS: " + limelightV1.getColorResults().get(limelightV1.getColorResults().size() - 1).toString());
-            }
-        }
 
 
     }
@@ -823,33 +767,4 @@ public class TeleOpV3 extends OpMode {
         differentialV2.setTopRightServoPosition(position);
         differentialV2.setTopLeftServoPosition(position);
     }
-
-    public boolean rotateGrippersToSample(){
-        telemetry.addLine("Limelight wrist pos: " + wrist.getPosition());
-        telemetry.addLine("Limelight sample angle:" + limelightV1.getAngle());
-        if(limelightActivated) {
-            if(limelightV1.getAngle() == -1){
-                return false;
-            }
-            if (limelightV1.getAngle() < constants.sampleAngle) {
-                wrist.moveLeft(0.03);
-            } else if (limelightV1.getAngle() > constants.sampleAngle) {
-                wrist.moveRight(0.03);
-            }
-            else {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void toggleLimelight(){
-        if(limelightActivated){
-            limelightActivated = false;
-        }
-        else {
-            limelightActivated = true;
-        }
-    }
-
 }

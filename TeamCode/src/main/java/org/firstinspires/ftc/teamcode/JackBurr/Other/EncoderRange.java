@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Other;
 
-public class Range {
+public class EncoderRange {
     public double num1, num2;
 
-    public Range(double n1, double n2){
-        this.num1 = n1;
-        this.num2 = n2;
+    public EncoderRange(double target, double tolerance){
+        this.num1 = target - tolerance;
+        this.num2 = target + tolerance;
     }
 
     public boolean isInRange(double number){

@@ -37,9 +37,10 @@ public class RobotConstantsV1 {
     public double DELIVERY_WALL_PICKUP = 0.69; //0.755
     public double WRIST_CENTER = 0.21;
     //MOTORS=========================================================================================================
-    public int INTAKE_MOTOR_IN = 3;
-    public int INTAKE_MOTOR_OUT = 850;
-    public int INTAKE_MOTOR_ALL_THE_WAY_IN = 0;
+    public int INTAKE_IN = 52;
+    public int INTAKE_OUT = 362;
+    public int INTAKE_OUT_AUTO = 102;
+    public int INTAKE_ALL_THE_WAY_IN = -10;
     public int LEFT_SLIDE_HIGH_BASKET = -3195;
     public int RIGHT_SLIDE_HIGH_BASKET = 3195;
     public int LEFT_SLIDE_LOW_BASKET = -1582;
@@ -56,8 +57,15 @@ public class RobotConstantsV1 {
     public int RIGHT_SLIDE_LEVEL_TWO_ASCENT_HOOK = 629;
     public int LEFT_SLIDE_HANG = -2200;
     public int RIGHT_SLIDE_HANG = 2200;
-
     //CAMERA========================================================================================================
     public static double sampleAngle = 0;
+    //ENCODERS=ON=SERVOS============================================================================================
+    public int DELIVERY_GRIPPERS_WITH_SAMPLE = 0;
+    public int DELIVERY_GRIPPERS_WITHOUT_SAMPLE = 0;
+    public int DELIVERY_AXON_TARGET = 0;
+    public int DELIVERY_AXON_STRAIGHT_UP = 0;
+    public int DIFF_TRANSFER_TARGET = 0;
+    public int GRIPPERS_OPEN_TARGET = 0;
     //==============================================================================================================
+
 }
