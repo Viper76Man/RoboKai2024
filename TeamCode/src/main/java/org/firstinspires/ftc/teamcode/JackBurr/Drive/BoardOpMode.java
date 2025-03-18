@@ -125,7 +125,7 @@ public class BoardOpMode extends OpMode {
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         state = SystemStatesV1.START;
-        differentialV2.init(hardwareMap, telemetry);
+        differentialV2.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
         deliveryAxon.init(hardwareMap);

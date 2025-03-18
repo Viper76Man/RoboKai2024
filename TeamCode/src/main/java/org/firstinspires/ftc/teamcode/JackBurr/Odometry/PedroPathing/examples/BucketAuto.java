@@ -436,7 +436,7 @@ public class BucketAuto extends OpMode {
         stateTimer.reset();
         deliveryGrippers.init(hardwareMap);
         deliveryAxon.init(hardwareMap);
-        diffV2.init(hardwareMap, telemetry);
+        diffV2.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
         slides.init(hardwareMap);
         intakeSlides.init(hardwareMap);

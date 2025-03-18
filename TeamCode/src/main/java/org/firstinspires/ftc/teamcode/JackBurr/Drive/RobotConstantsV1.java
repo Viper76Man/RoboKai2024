@@ -68,5 +68,5 @@ public class RobotConstantsV1 {
     public int DIFF_TRANSFER_TARGET = 0;
     public int GRIPPERS_OPEN_TARGET = 0;
     //==============================================================================================================
-
+    public double BUTTON_PRESS_DELAY = 0.3;
 }

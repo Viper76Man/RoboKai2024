@@ -28,7 +28,7 @@ public class AxonPickupTest4 extends OpMode {
     public ElapsedTime elbowTimer = new ElapsedTime();
     @Override
     public void init() {
-        diffv2.init(hardwareMap, telemetry);
+        diffv2.init(hardwareMap);
         grippers = hardwareMap.get(Servo.class, "grippers");
         grippers.setPosition(1);
     }

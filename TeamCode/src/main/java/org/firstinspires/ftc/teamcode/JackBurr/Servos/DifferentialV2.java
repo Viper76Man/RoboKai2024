@@ -5,9 +5,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotConstantsV1;
 
 public class DifferentialV2 {
-    public DiffConstantsV2 diffConstantsV2= new DiffConstantsV2();
+    public RobotConstantsV1 constants = new RobotConstantsV1();
     public Servo topLeft;
     public AnalogInput topLeftEncoder;
     public Servo topRight;
@@ -36,7 +37,7 @@ public class DifferentialV2 {
     public double BOTTOM_LEFT_SERVO_POSITION;
     public double BOTTOM_RIGHT_SERVO_POSITION;
 
-    public void init(HardwareMap hardwareMap, Telemetry telemetry){
+    public void init(HardwareMap hardwareMap){
         this.topLeft = hardwareMap.get(Servo.class, "left_diff");
         this.topLeftEncoder = hardwareMap.get(AnalogInput.class, "left_servo_encoder");
         this.topRight = hardwareMap.get(Servo.class, "right_diff");
@@ -239,5 +240,32 @@ public class DifferentialV2 {
         }
 
 
-}
+    }
+    public void diffHover(){
+        setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
+        setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
+    }
+
+    public void diffTransfer(){
+        setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+        setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
+    }
+
+    public void diffLowHover(){
+        setTopLeftServoPosition(constants.FRONT_LEFT_LOW_HOVER);
+        setTopRightServoPosition(constants.FRONT_RIGHT_LOW_HOVER);
+    }
+
+    public void diffOverLowBar(){
+        setTopLeftServoPosition(constants.FRONT_LEFT_OVER_LOW_BAR);
+        setTopRightServoPosition(constants.FRONT_RIGHT_OVER_LOW_BAR);
+    }
+
+    public void diffPickup(){
+        setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
+        setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
+    }
+
+
+
 }

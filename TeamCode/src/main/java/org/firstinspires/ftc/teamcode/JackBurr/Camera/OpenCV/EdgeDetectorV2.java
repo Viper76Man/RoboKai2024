@@ -30,7 +30,7 @@ public class EdgeDetectorV2 extends OpMode {
     public EdgeDetectionPipeline pipeline = new EdgeDetectionPipeline();
     @Override
     public void init() {
-        diff.init(hardwareMap, telemetry);
+        diff.init(hardwareMap);
         diff.setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
         diff.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
         cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());

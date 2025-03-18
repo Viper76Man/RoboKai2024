@@ -112,7 +112,7 @@ public class TeleOpV2 extends OpMode {
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         state = SystemStatesV1.START;
-        differentialV2.init(hardwareMap, telemetry);
+        differentialV2.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
         deliveryAxon.init(hardwareMap);
@@ -283,12 +283,11 @@ public class TeleOpV2 extends OpMode {
                     state = SystemStatesV1.START;
                     buttonTimer.reset();
                 }
-                if (gamepad1.left_bumper && buttonTimer.seconds() > 0.35){
+                if (gamepad1.left_bumper && buttonTimer.seconds() > 0.35) {
                     wrist.moveLeft(0.2);
                     buttonTimer.reset();
 
-                }
-                else if (gamepad1.right_bumper && buttonTimer.seconds() > 0.35){
+                } else if (gamepad1.right_bumper && buttonTimer.seconds() > 0.35) {
                     wrist.moveRight(0.2);
                     buttonTimer.reset();
                 }

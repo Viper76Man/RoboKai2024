@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class PinpointV1 {
     public GoBildaPinpointDriver pinpoint;
     public void init(HardwareMap hardwareMap){
-        this.pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        this.pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
     }
     public void update(){
         pinpoint.update();

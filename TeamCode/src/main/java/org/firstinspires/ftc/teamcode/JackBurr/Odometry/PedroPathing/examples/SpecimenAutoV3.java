@@ -371,7 +371,7 @@ public class SpecimenAutoV3 extends OpMode {
         intakeSlides.init(hardwareMap);
         intakeSlides.resetSlides();
         slides.resetSlides();
-        diffV2.init(hardwareMap, telemetry);
+        diffV2.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
         wrist.init(hardwareMap);
         Constants.setConstants(FConstantsLeft.class, LConstants.class);
