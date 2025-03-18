@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Drive;
 
 
+import com.pedropathing.localization.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
+import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PinpointV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
@@ -17,6 +19,7 @@ public class Robot {
     public IntakeSlidesV1 intakeSlides = new IntakeSlidesV1();
     public GrippersV1 grippers = new GrippersV1();
     public DeliveryGrippersV1 deliveryGrippers = new DeliveryGrippersV1();
+    public PinpointV1 pinpoint = new PinpointV1();
 
     //VARIABLES
     public HardwareMap hardwareMap;
@@ -36,15 +39,16 @@ public class Robot {
         deliveryGrippers.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         deliveryAxon.init(hardwareMap);
+        pinpoint.init(hardwareMap);
     }
 
     public void init(Mode mode){
         switch (mode){
             case AUTO:
                 zero();
+                pinpoint.resetPosAndIMU();
                 break;
             case TELEOP:
-                telemetry.addLine("Entering TeleOp.");
                 break;
         }
     }
