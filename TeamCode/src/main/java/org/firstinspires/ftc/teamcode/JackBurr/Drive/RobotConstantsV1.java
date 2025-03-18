@@ -62,6 +62,7 @@ public class RobotConstantsV1 {
     //ENCODERS=ON=SERVOS============================================================================================
     public int DELIVERY_GRIPPERS_WITH_SAMPLE = 0;
     public int DELIVERY_GRIPPERS_WITHOUT_SAMPLE = 0;
+    public int DELIVERY_GRIPPERS_OPEN_TARGET = 167;
     public int DELIVERY_AXON_TARGET = 0;
     public int DELIVERY_AXON_STRAIGHT_UP = 0;
     public int DIFF_TRANSFER_TARGET = 0;

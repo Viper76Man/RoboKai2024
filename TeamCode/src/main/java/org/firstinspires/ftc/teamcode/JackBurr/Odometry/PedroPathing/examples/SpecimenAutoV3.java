@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.examples;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
-import com.pedropathing.pathgen.BezierCurve;
 import com.pedropathing.pathgen.BezierLine;
 import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
@@ -22,7 +21,6 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
-import org.firstinspires.ftc.teamcode.WillKirby.B;
 
 /**
  *This is a 1 plus 2 specimen delivery and park
@@ -368,7 +366,7 @@ public class SpecimenAutoV3 extends OpMode {
         actionTimer = new ElapsedTime();
         opmodeTimer.reset();
         deliveryAxon.init(hardwareMap);
-        deliveryGrippers.init(hardwareMap, telemetry);
+        deliveryGrippers.init(hardwareMap);
         slides.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         intakeSlides.resetSlides();

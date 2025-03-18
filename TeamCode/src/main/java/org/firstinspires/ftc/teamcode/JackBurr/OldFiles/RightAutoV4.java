@@ -3,13 +3,9 @@ package org.firstinspires.ftc.teamcode.JackBurr.OldFiles;
 //import com.acmerobotics.roadrunner.geometry.Pose2d;
 //import com.acmerobotics.roadrunner.geometry.Vector2d;
 //import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.VelConstraint;
-import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -44,7 +40,7 @@ public class RightAutoV4 extends LinearOpMode {
        // drive = new PinpointDrive(hardwareMap, startPose);
         deliveryAxon.init(hardwareMap);
         deliverySlides.init(hardwareMap);
-        deliveryGrippers.init(hardwareMap, telemetry);
+        deliveryGrippers.init(hardwareMap);
         leftSlideTarget = constants.LEFT_SLIDE_HIGH_BAR_AUTO;
         rightSlideTarget = constants.RIGHT_SLIDE_HIGH_BAR_AUTO;
 

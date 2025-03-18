@@ -89,7 +89,7 @@ public class LeftAutoV4 extends LinearOpMode {
         //Pick SampleMecanumDrive for dashboard and RRMecanumDrive for no dashboard
         //drive = new PinpointDrive(hardwareMap, startPose);
         deliveryAxonV1.init(hardwareMap);
-        deliveryGrippers.init(hardwareMap, telemetry);
+        deliveryGrippers.init(hardwareMap);
         slides.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
         diffV2.init(hardwareMap, telemetry);

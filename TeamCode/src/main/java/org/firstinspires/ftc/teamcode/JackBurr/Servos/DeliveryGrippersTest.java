@@ -2,18 +2,16 @@ package org.firstinspires.ftc.teamcode.JackBurr.Servos;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @TeleOp
 public class DeliveryGrippersTest extends OpMode {
-    public Servo grippers;
+    public DeliveryGrippersV1 grippers = new DeliveryGrippersV1();
     public ElapsedTime buttonTimer = new ElapsedTime();
     public double target = 0;
     @Override
     public void init() {
-        grippers = hardwareMap.get(Servo.class, "deliveryGrippers");
+        grippers.init(hardwareMap);
         grippers.setPosition(0);
     }
 
@@ -29,5 +27,6 @@ public class DeliveryGrippersTest extends OpMode {
         }
         grippers.setPosition(target);
         telemetry.addLine(String.valueOf(target));
+        telemetry.addLine(String.valueOf(grippers.getEncoderPosition()));
     }
 }

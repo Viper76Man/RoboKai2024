@@ -36,7 +36,7 @@ public class RightAutoV2 extends LinearOpMode {
         //SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         deliveryAxon.init(hardwareMap);
         deliverySlides.init(hardwareMap);
-        deliveryGrippers.init(hardwareMap, telemetry);
+        deliveryGrippers.init(hardwareMap);
         leftSlideTarget = constants.LEFT_SLIDE_HIGH_BAR_AUTO;
         rightSlideTarget = constants.RIGHT_SLIDE_HIGH_BAR_AUTO;
 

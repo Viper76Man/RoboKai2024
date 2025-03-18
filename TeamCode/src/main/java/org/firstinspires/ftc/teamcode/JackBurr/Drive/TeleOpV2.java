@@ -12,9 +12,6 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
-import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristServoTest;
-
-import java.util.Optional;
 
 @TeleOp
 public class TeleOpV2 extends OpMode {
@@ -119,7 +116,7 @@ public class TeleOpV2 extends OpMode {
         intakeSlides.init(hardwareMap);
         grippers.init(hardwareMap, telemetry);
         deliveryAxon.init(hardwareMap);
-        deliveryGrippers.init(hardwareMap, telemetry);
+        deliveryGrippers.init(hardwareMap);
         wrist.init(hardwareMap);
         deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
         wrist.setPosition(constants.WRIST_CENTER);

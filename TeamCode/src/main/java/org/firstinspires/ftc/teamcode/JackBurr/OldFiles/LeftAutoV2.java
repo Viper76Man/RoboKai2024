@@ -29,7 +29,7 @@ public class LeftAutoV2 extends LinearOpMode {
         //Pick SampleMecanumDrive for dashboard and RRMecanumDrive for no dashboard
         //SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         deliveryAxonV1.init(hardwareMap);
-        deliveryGrippers.init(hardwareMap, telemetry);
+        deliveryGrippers.init(hardwareMap);
         slides.init(hardwareMap);
 
         /** Wait for the game to begin */
