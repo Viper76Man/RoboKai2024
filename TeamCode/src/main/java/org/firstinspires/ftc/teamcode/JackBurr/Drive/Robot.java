@@ -162,6 +162,7 @@ public class Robot {
                         wrist.setPosition(constants.WRIST_CENTER);
                         break;
                     case LOW_HOVER:
+                        grippers.setPosition(constants.GRIPPERS_OPEN);
                         intakeSlides.intakeOut();
                         diffV2.diffHover();
                         updateWrist();
@@ -185,14 +186,47 @@ public class Robot {
                         wrist.setPosition(constants.WRIST_CENTER);
                         diffV2.diffTransfer();
                         intakeSlides.intakeAllTheWayIn();
+                        if(getStateTimerSeconds() > 1.2 && getStateTimerSeconds() > 3){
+                            setDeliveryState(DeliveryStates.TRANSFER_GRIPPERS_CLOSED);
+                            stateTimer.reset();
+                        }
+                        else if(getStateTimerSeconds() > 3){
+                            setRegularIntakeState(RegularIntakeStates.GRIPPERS_OPEN);
+                        }
                         break;
                     case GRIPPERS_OPEN:
                         grippers.setPosition(constants.GRIPPERS_OPEN);
+                        intakeSlides.intakeIn();
                         break;
                 }
                 break;
             case UNDER_LOW_BAR:
                 break;
+        }
+        switch (deliveryState){
+            case TRANSFER_GRIPPERS_OPEN:
+                slides.runLeftSlideToPosition(0, 0.2);
+                slides.runRightSlideToPosition(0, 0.2);
+                deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                break;
+            case TRANSFER_GRIPPERS_CLOSED:
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                break;
+            case SLIDES_UP_HIGH_BASKET:
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET,1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET,1);
+                if(stateTimer.seconds() > 1){
+                    deliveryAxon.setPosition(constants.DELIVERY_UP);
+                }
+                break;
+            case SLIDES_UP_HIGH_BAR:
+                deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR,1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR,1);
+                break;
+
         }
     }
 
