@@ -76,6 +76,7 @@ public class Robot {
     }
 
     public boolean slowmode = false;
+    public boolean stateFinishedIntake = false;
     public ElapsedTime buttonTimer = new ElapsedTime();
     public DeliveryStates deliveryState = DeliveryStates.TRANSFER_GRIPPERS_OPEN;
     public IntakeStates intakeState = IntakeStates.START;
@@ -160,25 +161,32 @@ public class Robot {
                         intakeSlides.intakeIn();
                         diffV2.diffTransfer();
                         wrist.setPosition(constants.WRIST_CENTER);
+                        stateFinishedIntake = true;
                         break;
                     case LOW_HOVER:
                         grippers.setPosition(constants.GRIPPERS_OPEN);
                         intakeSlides.intakeOut();
                         diffV2.diffHover();
                         updateWrist();
+                        stateFinishedIntake = true;
                         break;
                     case DOWN_ON_SAMPLE:
                         diffV2.diffPickup();
                         updateWrist();
+                        stateFinishedIntake = true;
                         break;
                     case DOWN_ON_SAMPLE_GRIPPERS_CLOSED:
-                        grippers.setPosition(constants.GRIPPERS_CLOSE);
+                        grippers.setPosition(constants.GRIPPERS_GRAB);
+                        if(stateTimer.seconds() > 0.4){
+                            setRegularIntakeState(RegularIntakeStates.DIFF_UP);
+                        }
                         break;
                     case DIFF_UP:
                         wrist.setPosition(constants.WRIST_CENTER);
                         diffV2.diffTransfer();
                         if(getStateTimerSeconds() > 0.5){
                             setRegularIntakeState(RegularIntakeStates.GRIPPERS_CLOSED_TRANSFER);
+                            stateFinishedIntake = true;
                             stateTimer.reset();
                         }
                         break;
@@ -226,27 +234,32 @@ public class Robot {
                 slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR,1);
                 slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR,1);
                 break;
+            case DROP:
+                deliveryAxon.setPosition(constants.GRIPPERS_OPEN);
 
         }
     }
 
     public void nextState(){
-        switch(intakeState){
-            case REGULAR:
-                switch (regularIntakeState){
-                    case START:
-                        setRegularIntakeState(RegularIntakeStates.LOW_HOVER);
-                        break;
-                    case LOW_HOVER:
-                        setRegularIntakeState(RegularIntakeStates.DOWN_ON_SAMPLE);
-                        break;
-                    case DOWN_ON_SAMPLE:
-                        setRegularIntakeState(RegularIntakeStates.DOWN_ON_SAMPLE_GRIPPERS_CLOSED);
-                        break;
-                }
-                break;
-            case UNDER_LOW_BAR:
-                break;
+        //Reduce driver error
+        if(stateFinishedIntake){
+            switch(intakeState) {
+                case REGULAR:
+                    switch (regularIntakeState) {
+                        case START:
+                            setRegularIntakeState(RegularIntakeStates.LOW_HOVER);
+                            break;
+                        case LOW_HOVER:
+                            setRegularIntakeState(RegularIntakeStates.DOWN_ON_SAMPLE);
+                            break;
+                        case DOWN_ON_SAMPLE:
+                            setRegularIntakeState(RegularIntakeStates.DOWN_ON_SAMPLE_GRIPPERS_CLOSED);
+                            break;
+                    }
+                    break;
+                case UNDER_LOW_BAR:
+                    break;
+            }
         }
         stateTimer.reset();
     }
@@ -260,6 +273,7 @@ public class Robot {
     }
 
     public void setRegularIntakeState(RegularIntakeStates intakeState){
+        stateFinishedIntake = false;
         this.regularIntakeState = intakeState;
     }
 
