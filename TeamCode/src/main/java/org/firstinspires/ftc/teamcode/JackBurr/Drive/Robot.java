@@ -282,6 +282,18 @@ public class Robot {
                     setRegularIntakeState(RegularIntakeStates.values()[RegularIntakeStates.valueOf(regularIntakeState.name()).ordinal() - 1]);
                     break;
                 case GRIPPERS_OPEN:
+                    switch (deliveryState){
+                        case TRANSFER_GRIPPERS_CLOSED:
+                            setRegularIntakeState(RegularIntakeStates.DOWN_ON_SAMPLE);
+                            break;
+                        case SLIDES_UP_HIGH_BASKET:
+                            setDeliveryState(DeliveryStates.TRANSFER_GRIPPERS_CLOSED);
+                            break;
+                        case DROP:
+                            setDeliveryState(DeliveryStates.TRANSFER_GRIPPERS_OPEN);
+                            setRegularIntakeState(RegularIntakeStates.START);
+                            break;
+                    }
                     break;
             }
             return;
