@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.internal.system.StartableService;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PinpointV1;
+import org.firstinspires.ftc.teamcode.JackBurr.Other.EncoderRange;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
@@ -31,10 +32,22 @@ public class Robot {
     public RobotConstantsV1 constants = new RobotConstantsV1();
 
     //VARIABLES
+    public int SLIDES_RANGE_TOLERANCE = 10;
     public HardwareMap hardwareMap;
     public Telemetry telemetry;
     public Gamepad gamepad1;
     public ElapsedTime stateTimer = new ElapsedTime();
+    public EncoderRange slidesDownRange = new EncoderRange(0, SLIDES_RANGE_TOLERANCE);
+
+
+    public int LEFT_SLIDE_DOWN = 0;
+    public int RIGHT_SLIDE_DOWN = 0;
+
+    public int LEFT_SLIDE_HIGH_BASKET = constants.LEFT_SLIDE_HIGH_BASKET;
+    public int RIGHT_SLIDE_HIGH_BASKET = constants.RIGHT_SLIDE_HIGH_BASKET;
+
+    public int LEFT_SLIDE_HIGH_BAR = constants.LEFT_SLIDE_HIGH_BAR;
+    public int RIGHT_SLIDE_HIGH_BAR = constants.RIGHT_SLIDE_HIGH_BAR;
 
     public enum DeliveryStates {
         TRANSFER_GRIPPERS_OPEN,
@@ -130,6 +143,13 @@ public class Robot {
         }
     }
 
+    public void update(){
+        updateWrist();
+        if(slidesDownRange.getTarget() != LEFT_SLIDE_DOWN){
+            slidesDownRange = new EncoderRange(LEFT_SLIDE_DOWN, SLIDES_RANGE_TOLERANCE);
+        }
+    }
+
     public void updateWrist(){
         if (gamepad1.left_bumper && isGamepadReady()){
             wrist.moveLeft(0.2);
@@ -214,8 +234,8 @@ public class Robot {
         }
         switch (deliveryState){
             case TRANSFER_GRIPPERS_OPEN:
-                slides.runLeftSlideToPosition(0, 0.2);
-                slides.runRightSlideToPosition(0, 0.2);
+                slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 0.2);
+                slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 0.2);
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 break;
@@ -224,21 +244,31 @@ public class Robot {
                 break;
             case SLIDES_UP_HIGH_BASKET:
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET,1);
-                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET,1);
+                slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BASKET,1);
+                slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BASKET,1);
                 if(stateTimer.seconds() > 1){
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
                 }
                 break;
             case SLIDES_UP_HIGH_BAR:
                 deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
-                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR,1);
-                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR,1);
+                slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BAR,1);
+                slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BAR,1);
                 break;
             case DROP:
                 deliveryAxon.setPosition(constants.DELIVERY_DROP);
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 break;
+            case RESET:
+                deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                if(stateTimer.seconds() > 0.4) {
+                    slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 1);
+                    slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 1);
+                }
+                if(slidesDownRange.isInRange(slides.getLeftSlidePosition()) & slidesDownRange.isInRange(slides.getRightSlidePosition())){
+                    setDeliveryState(DeliveryStates.TRANSFER_GRIPPERS_OPEN);
+                    setIntakeState(IntakeStates.START);
+                }
         }
     }
 
