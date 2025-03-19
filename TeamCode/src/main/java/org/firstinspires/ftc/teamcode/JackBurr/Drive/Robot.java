@@ -273,6 +273,19 @@ public class Robot {
     }
 
     public void nextState(int button){
+        if (button == 2){
+            switch (regularIntakeState){
+                case START:
+                    return;
+                case LOW_HOVER:
+                case DOWN_ON_SAMPLE:
+                    setRegularIntakeState(RegularIntakeStates.values()[RegularIntakeStates.valueOf(regularIntakeState.name()).ordinal() - 1]);
+                    break;
+                case GRIPPERS_OPEN:
+                    break;
+            }
+            return;
+        }
         //Reduce driver error
         if(stateFinishedIntake){
             switch(intakeState) {
