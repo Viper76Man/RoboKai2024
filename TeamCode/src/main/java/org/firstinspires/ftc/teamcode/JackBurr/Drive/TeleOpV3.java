@@ -21,7 +21,11 @@ public class TeleOpV3 extends OpMode {
             robot.resetButtonTimer();
         }
         else if(robot.isGamepadReady() && gamepad1.x){
-            robot.nextState();
+            robot.nextState(1);
+            robot.resetButtonTimer();
+        }
+        else if(robot.isGamepadReady() && gamepad1.y){
+            robot.nextState(2);
             robot.resetButtonTimer();
         }
     }

@@ -77,6 +77,7 @@ public class Robot {
 
     public boolean slowmode = false;
     public boolean stateFinishedIntake = false;
+    public boolean stateFinishedDelivery = false;
     public ElapsedTime buttonTimer = new ElapsedTime();
     public DeliveryStates deliveryState = DeliveryStates.TRANSFER_GRIPPERS_OPEN;
     public IntakeStates intakeState = IntakeStates.START;
@@ -235,12 +236,13 @@ public class Robot {
                 slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR,1);
                 break;
             case DROP:
-                deliveryAxon.setPosition(constants.GRIPPERS_OPEN);
-
+                deliveryAxon.setPosition(constants.DELIVERY_DROP);
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                break;
         }
     }
 
-    public void nextState(){
+    public void nextState(int button){
         //Reduce driver error
         if(stateFinishedIntake){
             switch(intakeState) {
@@ -255,6 +257,18 @@ public class Robot {
                         case DOWN_ON_SAMPLE:
                             setRegularIntakeState(RegularIntakeStates.DOWN_ON_SAMPLE_GRIPPERS_CLOSED);
                             break;
+                        case GRIPPERS_OPEN:
+                            switch (deliveryState){
+                                case TRANSFER_GRIPPERS_CLOSED:
+                                    setDeliveryState(DeliveryStates.SLIDES_UP_HIGH_BASKET);
+                                    break;
+                                case SLIDES_UP_HIGH_BASKET:
+                                    setDeliveryState(DeliveryStates.DROP);
+                                    break;
+                                case DROP:
+                                    setRegularIntakeState(RegularIntakeStates.START);
+
+                            }
                     }
                     break;
                 case UNDER_LOW_BAR:
@@ -269,6 +283,7 @@ public class Robot {
     }
 
     public void setDeliveryState(DeliveryStates deliveryState){
+        stateFinishedDelivery = false;
         this.deliveryState = deliveryState;
     }
 
