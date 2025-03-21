@@ -99,7 +99,7 @@ public class TeleOpV1 extends OpMode {
         state = SystemStatesV1.START;
         differentialV2.init(hardwareMap);
         intakeSlides.init(hardwareMap);
-        grippers.init(hardwareMap, telemetry);
+        grippers.init(hardwareMap);
         deliveryAxon.init(hardwareMap);
         deliveryGrippers.init(hardwareMap);
         wrist.init(hardwareMap);

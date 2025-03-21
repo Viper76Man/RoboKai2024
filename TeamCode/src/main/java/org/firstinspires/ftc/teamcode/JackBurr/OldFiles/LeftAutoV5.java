@@ -89,7 +89,7 @@ public class LeftAutoV5 extends LinearOpMode {
         deliveryAxonV1.init(hardwareMap);
         deliveryGrippers.init(hardwareMap);
         slides.init(hardwareMap);
-        grippers.init(hardwareMap, telemetry);
+        grippers.init(hardwareMap);
         diffV2.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         wrist.init(hardwareMap);

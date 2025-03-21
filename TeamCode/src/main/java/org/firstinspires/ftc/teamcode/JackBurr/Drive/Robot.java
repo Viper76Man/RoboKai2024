@@ -89,11 +89,10 @@ public class Robot {
     }
 
     public boolean slowmode = false;
-    public boolean stateFinishedIntake = false;
-    public boolean stateFinishedDelivery = false;
+    public boolean stateFinished= false;
     public ElapsedTime buttonTimer = new ElapsedTime();
     public DeliveryStates deliveryState = DeliveryStates.TRANSFER_GRIPPERS_OPEN;
-    public IntakeStates intakeState = IntakeStates.START;
+    public IntakeStates intakeState = IntakeStates.REGULAR;
     public RegularIntakeStates regularIntakeState = RegularIntakeStates.START;
     public UnderLowBarIntakeStates underLowBarIntakeStates = UnderLowBarIntakeStates.START;
 
@@ -127,6 +126,7 @@ public class Robot {
         drivetrain.init(hardwareMap);
         wrist.init(hardwareMap);
         diffV2.init(hardwareMap);
+        grippers.init(hardwareMap);
     }
 
     public void zero(){
@@ -176,25 +176,31 @@ public class Robot {
 
     public void systemStatesUpdate(){
         switch (intakeState){
+            case START:
+                intakeSlides.intakeIn();
+                diffV2.diffTransfer();
+                wrist.setPosition(constants.WRIST_CENTER);
+                stateFinished = true;
+                break;
             case REGULAR:
                 switch (regularIntakeState){
                     case START:
                         intakeSlides.intakeIn();
                         diffV2.diffTransfer();
                         wrist.setPosition(constants.WRIST_CENTER);
-                        stateFinishedIntake = true;
+                        stateFinished = true;
                         break;
                     case LOW_HOVER:
                         grippers.setPosition(constants.GRIPPERS_OPEN);
                         intakeSlides.intakeOut();
                         diffV2.diffHover();
                         updateWrist();
-                        stateFinishedIntake = true;
+                        stateFinished = true;
                         break;
                     case DOWN_ON_SAMPLE:
                         diffV2.diffPickup();
                         updateWrist();
-                        stateFinishedIntake = true;
+                        stateFinished = true;
                         break;
                     case DOWN_ON_SAMPLE_GRIPPERS_CLOSED:
                         grippers.setPosition(constants.GRIPPERS_GRAB);
@@ -207,7 +213,7 @@ public class Robot {
                         diffV2.diffTransfer();
                         if(getStateTimerSeconds() > 0.5){
                             setRegularIntakeState(RegularIntakeStates.GRIPPERS_CLOSED_TRANSFER);
-                            stateFinishedIntake = true;
+                            stateFinished = true;
                             stateTimer.reset();
                         }
                         break;
@@ -226,6 +232,9 @@ public class Robot {
                     case GRIPPERS_OPEN:
                         grippers.setPosition(constants.GRIPPERS_OPEN);
                         intakeSlides.intakeIn();
+                        if(getStateTimerSeconds() > 1.2){
+                            stateFinished = true;
+                        }
                         break;
                 }
                 break;
@@ -234,39 +243,46 @@ public class Robot {
         }
         switch (deliveryState){
             case TRANSFER_GRIPPERS_OPEN:
-                slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 0.2);
-                slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 0.2);
+                //slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 0.2);
+                //slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 0.2);
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                stateFinished = true;
                 break;
             case TRANSFER_GRIPPERS_CLOSED:
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                 break;
             case SLIDES_UP_HIGH_BASKET:
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BASKET,1);
-                slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BASKET,1);
+                //slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BASKET,1);
+                //slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BASKET,1);
                 if(stateTimer.seconds() > 1){
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
+                }
+                if(stateTimer.seconds() > 1.2){
+                    stateFinished = true;
                 }
                 break;
             case SLIDES_UP_HIGH_BAR:
                 deliveryAxon.setPosition(constants.DELIVERY_HIGH_BAR);
-                slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BAR,1);
-                slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BAR,1);
+                //slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BAR,1);
+                //slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BAR,1);
+                if(stateTimer.seconds() > 1.8){
+                    stateFinished = true;
+                }
                 break;
             case DROP:
                 deliveryAxon.setPosition(constants.DELIVERY_DROP);
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 if(stateTimer.seconds() > 0.5){
-                    stateFinishedDelivery = true;
+                    stateFinished = true;
                 }
                 break;
             case RESET:
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 if(stateTimer.seconds() > 0.4) {
-                    slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 1);
-                    slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 1);
+                    //slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 1);
+                    //slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 1);
                 }
                 if(slidesDownRange.isInRange(slides.getLeftSlidePosition()) & slidesDownRange.isInRange(slides.getRightSlidePosition())){
                     setDeliveryState(DeliveryStates.TRANSFER_GRIPPERS_OPEN);
@@ -303,7 +319,7 @@ public class Robot {
         }
         //Reduce driver error
         //TODO: Check this
-        if(stateFinishedIntake && stateFinishedDelivery){
+        if(stateFinished){
             switch(intakeState) {
                 case REGULAR:
                     switch (regularIntakeState) {
@@ -326,6 +342,7 @@ public class Robot {
                                     break;
                                 case DROP:
                                     setRegularIntakeState(RegularIntakeStates.RESET);
+                                    break;
                             }
                     }
                     break;
@@ -339,15 +356,16 @@ public class Robot {
     public void setIntakeState(IntakeStates intakeState){
         //TODO: add state reset state finished (delivery) if needed
         this.intakeState = intakeState;
+        stateTimer.reset();
     }
 
     public void setDeliveryState(DeliveryStates deliveryState){
-        stateFinishedDelivery = false;
+        stateFinished = false;
         this.deliveryState = deliveryState;
     }
 
     public void setRegularIntakeState(RegularIntakeStates intakeState){
-        stateFinishedIntake = false;
+        stateFinished = false;
         this.regularIntakeState = intakeState;
     }
 
@@ -357,6 +375,14 @@ public class Robot {
 
     public double getStateTimerSeconds(){
         return stateTimer.seconds();
+    }
+
+    public void logStates(){
+        telemetry.addLine("Intake State: " + intakeState.name());
+        telemetry.addLine("Delivery State: " + deliveryState.name());
+        if(stateFinished){
+            telemetry.addLine("STATE FINISHED");
+        }
     }
 
 

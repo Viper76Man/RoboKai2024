@@ -28,5 +28,6 @@ public class TeleOpV3 extends OpMode {
             robot.nextState(2);
             robot.resetButtonTimer();
         }
+        robot.logStates();
     }
 }

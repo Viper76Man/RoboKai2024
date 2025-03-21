@@ -59,7 +59,7 @@ public class RightAutoV9 extends LinearOpMode {
         deliveryAxon.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         wrist.init(hardwareMap);
-        grippers.init(hardwareMap, telemetry);
+        grippers.init(hardwareMap);
         differentialV2.init(hardwareMap);
         deliveryGrippers.init(hardwareMap);
         follower = new Follower(hardwareMap);

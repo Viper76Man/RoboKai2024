@@ -459,7 +459,7 @@ public class BucketAutoDualFSM extends OpMode {
         deliveryGrippers.init(hardwareMap);
         deliveryAxon.init(hardwareMap);
         diffV2.init(hardwareMap);
-        grippers.init(hardwareMap, telemetry);
+        grippers.init(hardwareMap);
         slides.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         intakeSlides.resetSlides();

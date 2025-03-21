@@ -376,7 +376,7 @@ public class SpecimenAutoV2 extends OpMode {
         intakeSlides.resetSlides();
         slides.resetSlides();
         diffV2.init(hardwareMap);
-        grippers.init(hardwareMap, telemetry);
+        grippers.init(hardwareMap);
         wrist.init(hardwareMap);
         Constants.setConstants(FConstantsLeft.class, LConstants.class);
         follower = new Follower(hardwareMap);
