@@ -258,6 +258,9 @@ public class Robot {
             case DROP:
                 deliveryAxon.setPosition(constants.DELIVERY_DROP);
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                if(stateTimer.seconds() > 0.5){
+                    stateFinishedDelivery = true;
+                }
                 break;
             case RESET:
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
@@ -299,7 +302,8 @@ public class Robot {
             return;
         }
         //Reduce driver error
-        if(stateFinishedIntake){
+        //TODO: Check this
+        if(stateFinishedIntake && stateFinishedDelivery){
             switch(intakeState) {
                 case REGULAR:
                     switch (regularIntakeState) {
@@ -321,8 +325,7 @@ public class Robot {
                                     setDeliveryState(DeliveryStates.DROP);
                                     break;
                                 case DROP:
-                                    setRegularIntakeState(RegularIntakeStates.START);
-
+                                    setRegularIntakeState(RegularIntakeStates.RESET);
                             }
                     }
                     break;
@@ -334,6 +337,7 @@ public class Robot {
     }
 
     public void setIntakeState(IntakeStates intakeState){
+        //TODO: add state reset state finished (delivery) if needed
         this.intakeState = intakeState;
     }
 
