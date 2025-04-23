@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
 
 public class Robot {
+    //TODO: Move the delivery axon
     //HARDWARE CLASSES
     public DeliverySlidesV1 slides = new DeliverySlidesV1();
     public DeliveryAxonV1 deliveryAxon = new DeliveryAxonV1();
@@ -211,7 +212,7 @@ public class Robot {
                     case DIFF_UP:
                         wrist.setPosition(constants.WRIST_CENTER);
                         diffV2.diffTransfer();
-                        if(getStateTimerSeconds() > 0.5){
+                        if(getStateTimerSeconds() > 0.75){
                             setRegularIntakeState(RegularIntakeStates.GRIPPERS_CLOSED_TRANSFER);
                             stateFinished = true;
                             stateTimer.reset();
@@ -221,11 +222,10 @@ public class Robot {
                         wrist.setPosition(constants.WRIST_CENTER);
                         diffV2.diffTransfer();
                         intakeSlides.intakeAllTheWayIn();
-                        if(getStateTimerSeconds() > 1.2 && getStateTimerSeconds() > 3){
+                        if(getStateTimerSeconds() > 1.2 && getStateTimerSeconds() < 2){
                             setDeliveryState(DeliveryStates.TRANSFER_GRIPPERS_CLOSED);
-                            stateTimer.reset();
                         }
-                        else if(getStateTimerSeconds() > 3){
+                        else if(getStateTimerSeconds() > 2){
                             setRegularIntakeState(RegularIntakeStates.GRIPPERS_OPEN);
                         }
                         break;
@@ -246,8 +246,9 @@ public class Robot {
                 //slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 0.2);
                 //slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 0.2);
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
-                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
-                stateFinished = true;
+                if(stateTimer.seconds() > 0.2) {
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                }
                 break;
             case TRANSFER_GRIPPERS_CLOSED:
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
@@ -367,6 +368,7 @@ public class Robot {
     public void setRegularIntakeState(RegularIntakeStates intakeState){
         stateFinished = false;
         this.regularIntakeState = intakeState;
+        stateTimer.reset();
     }
 
     public void setUnderLowBarIntakeState(UnderLowBarIntakeStates intakeState){
