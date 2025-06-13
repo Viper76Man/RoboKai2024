@@ -5,29 +5,29 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
 public class TeleOpV3 extends OpMode {
-    public Robot robot = new Robot();
+    public RobotV2 robotv2 = new RobotV2();
     @Override
     public void init() {
-        robot.init(hardwareMap, telemetry, Robot.Mode.TELEOP, gamepad1);
+        robotv2.init(hardwareMap, telemetry, RobotV2.Mode.TELEOP, gamepad1);
     }
 
     @Override
     public void loop() {
         //DRIVE
-        robot.drive();
-        robot.systemStatesUpdate();
-        if(robot.isGamepadReady() && gamepad1.options){
-            robot.toggleSlowMode();
-            robot.resetButtonTimer();
+        robotv2.drive();
+        robotv2.systemStatesUpdate();
+        if(robotv2.isGamepadReady() && gamepad1.options){
+            robotv2.toggleSlowMode();
+            robotv2.resetButtonTimer();
         }
-        else if(robot.isGamepadReady() && gamepad1.x){
-            robot.nextState(1);
-            robot.resetButtonTimer();
+        else if(robotv2.isGamepadReady() && gamepad1.square){
+            robotv2.nextState(1);
+            robotv2.resetButtonTimer();
         }
-        else if(robot.isGamepadReady() && gamepad1.y){
-            robot.nextState(2);
-            robot.resetButtonTimer();
+        else if(robotv2.isGamepadReady() && gamepad1.triangle){
+            robotv2.nextState(2);
+            robotv2.resetButtonTimer();
         }
-        robot.logStates();
+        robotv2.logStates();
     }
 }
