@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Drive;
 
+import android.view.contentcapture.DataRemovalRequest;
 
-import com.pedropathing.localization.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.internal.system.StartableService;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PinpointV1;
@@ -32,7 +31,7 @@ public class RobotV2 {
     public RobotConstantsV1 constants = new RobotConstantsV1();
 
     //VARIABLES
-    public int SLIDES_RANGE_TOLERANCE = 10;
+    public int SLIDES_RANGE_TOLERANCE = 40;
     public HardwareMap hardwareMap;
     public Telemetry telemetry;
     public Gamepad gamepad1;
@@ -74,6 +73,7 @@ public class RobotV2 {
        INTAKE_GRIPPERS_OPEN_SLIDES_OUT,
        DELIVER_HIGH_BAR,
        DELIVER_HIGH_BASKET,
+       DROP_HIGH_BASKET,
        DELIVER_LOW_BASKET
    }
 
@@ -178,18 +178,98 @@ public class RobotV2 {
 
     public void systemStatesUpdate(){
         switch (systemState){
+            case START:
+                deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                wrist.setPosition(constants.WRIST_CENTER);
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
+                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                if(stateTimer.seconds() > 1.5) {
+                    if(slidesDownRange.isInRange(slides.getLeftSlidePosition())){
+                        slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 0.2);
+                        slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 0.2);
+                        stateFinished = true;
+                    }
+                    else {
+                        slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 1);
+                        slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 1);
+                    }
+                    intakeSlides.intakeAllTheWayIn();
+                }
+                break;
             case LOW_HOVER:
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_LOW_HOVER);
-                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
+                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_LOW_HOVER);
                 intakeSlides.intakeOut();
+                grippers.setPosition(constants.GRIPPERS_OPEN);
                 if(getStateTimerSeconds() > 1.5){
                     stateFinished = true;
+                    break;
                 }
+                break;
             case DOWN_ON_SAMPLE:
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
-                if (getStateTimerSeconds() > 1) {
+                //TODO: Change this if we should wait to grab
+                if (getStateTimerSeconds() > 0.65) {
                     setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB);
+                    break;
+                }
+                break;
+            case DOWN_ON_SAMPLE_GRAB:
+                grippers.setPosition(constants.GRIPPERS_GRAB);
+                if(getStateTimerSeconds() > 0.3){
+                    setSystemState(SystemStates.DIFF_UP);
+                    break;
+                }
+                break;
+            case DIFF_UP:
+                wrist.setPosition(constants.WRIST_CENTER);
+                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
+                if(getStateTimerSeconds() > 1){
+                    setSystemState(SystemStates.SLIDES_IN);
+                }
+                break;
+            case SLIDES_IN:
+                intakeSlides.intakeAllTheWayIn();
+                if(getStateTimerSeconds() > 0.75){
+                    setSystemState(SystemStates.DELIVERY_GRIPPERS_CLOSED);
+                }
+                break;
+            case DELIVERY_GRIPPERS_CLOSED:
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                if(getStateTimerSeconds() > 0.5){
+                    setSystemState(SystemStates.INTAKE_GRIPPERS_OPEN);
+                }
+                break;
+            case INTAKE_GRIPPERS_OPEN:
+                grippers.setPosition(constants.GRIPPERS_OPEN);
+                if(getStateTimerSeconds() > 0.5){
+                    setSystemState(SystemStates.INTAKE_GRIPPERS_OPEN_SLIDES_OUT);
+                }
+                break;
+            case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
+                intakeSlides.intakeIn();
+                if(getStateTimerSeconds() > 0.2){
+                    stateFinished = true;
+                }
+                break;
+            case DELIVER_HIGH_BASKET:
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET, 1);
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET, 1);
+                if(Math.abs(slides.getLeftSlidePosition()) > (Math.abs(constants.LEFT_SLIDE_HIGH_BASKET) / 2)){
+                    deliveryAxon.setPosition(constants.DELIVERY_UP);
+                }
+                if(stateTimer.seconds() > 1.75){
+                    stateFinished = true;
+                }
+                break;
+            case DROP_HIGH_BASKET:
+                deliveryAxon.setPosition(constants.DELIVERY_DROP);
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                if(stateTimer.seconds() > 0.2){
+                    stateFinished = true;
                 }
                 break;
         }
@@ -208,12 +288,41 @@ public class RobotV2 {
                         case LOW_HOVER:
                             setSystemState(SystemStates.DOWN_ON_SAMPLE);
                             break;
+                        case DOWN_ON_SAMPLE_GRAB:
+                            setSystemState(SystemStates.DIFF_UP);
+                            break;
+                        case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
+                            setSystemState(SystemStates.DELIVER_HIGH_BASKET);
+                            break;
+                        case DELIVER_HIGH_BASKET:
+                            setSystemState(SystemStates.DROP_HIGH_BASKET);
+                            break;
+                        case DROP_HIGH_BASKET:
+                            setSystemState(SystemStates.START);
+                            break;
                     }
                     stateTimer.reset();
                 }
+                stateFinished = false;
                 break;
             case 2: //Triangle (Reset button)
                 //TODO: Add the reset button
+                switch (systemState){
+                    case LOW_HOVER:
+                    case DROP_HIGH_BASKET:
+                        setSystemState(SystemStates.START);
+                        break;
+                    case DOWN_ON_SAMPLE:
+                    case DOWN_ON_SAMPLE_GRAB_2:
+                    case DIFF_UP:
+                    case SLIDES_IN:
+                    case INTAKE_GRIPPERS_OPEN:
+                    case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
+                    case DELIVERY_GRIPPERS_CLOSED:
+                    case DELIVER_HIGH_BASKET:
+                        setSystemState(SystemStates.LOW_HOVER);
+                        break;
+                }
                 break;
 
         }
