@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PinpointV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Other.EncoderRange;
+import org.firstinspires.ftc.teamcode.JackBurr.Sensors.DistanceSensorV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryAxonV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DeliveryGrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
@@ -29,9 +30,12 @@ public class RobotV2 {
     public PinpointV1 pinpoint = new PinpointV1();
     public Drivetrain drivetrain = new Drivetrain();
     public RobotConstantsV1 constants = new RobotConstantsV1();
+    public DistanceSensorV1 distanceSensor = new DistanceSensorV1();
 
-    //Delivery slide positions and tolerance
-    public int SLIDES_RANGE_TOLERANCE = 200;
+    //Delivery slide positions and tolerance, jog variable
+    public int SLIDES_RANGE_TOLERANCE = 600;
+    public int SLIDES_JOG_AMOUNT = 20;
+
     public int LEFT_SLIDE_DOWN = 0;
     public int RIGHT_SLIDE_DOWN = 0;
     public int LEFT_SLIDE_HIGH_BASKET = constants.LEFT_SLIDE_HIGH_BASKET;
@@ -66,6 +70,7 @@ public class RobotV2 {
        //LOW BAR ONLY
        UNDER_LOW_BAR_HOVER,
        UNDER_LOW_BAR_SLIDES_OUT,
+       DOWN_ON_SAMPLE_2,
        DOWN_ON_SAMPLE_GRAB_2,
        UNDER_LOW_BAR_SLIDES_IN_HOVER,
        //Rest of the path
@@ -74,6 +79,7 @@ public class RobotV2 {
        DELIVERY_GRIPPERS_CLOSED, //Timers move to next state
        INTAKE_GRIPPERS_OPEN, //Timers move to next state
        INTAKE_GRIPPERS_OPEN_SLIDES_OUT,
+       DROP_TO_HUMAN_PLAYER,
        DELIVER_HIGH_BAR,
        DELIVER_HIGH_BASKET,
        DROP_HIGH_BASKET,
@@ -97,6 +103,7 @@ public class RobotV2 {
     public ElapsedTime buttonTimer = new ElapsedTime();
     public SystemStates systemState = SystemStates.START;
     public StatesPath statesPath = StatesPath.NONE;
+    public SystemStates lastState = SystemStates.START;
 
     //Init all hardware and telemetry
     public void init(HardwareMap hardwareMap, Telemetry telemetry, Mode mode, Gamepad gamepad1){
@@ -126,6 +133,7 @@ public class RobotV2 {
         wrist.init(hardwareMap);
         diffV2.init(hardwareMap);
         grippers.init(hardwareMap);
+        distanceSensor.init(hardwareMap);
     }
 
     //Zero both sets of slides
@@ -146,7 +154,9 @@ public class RobotV2 {
 
     //Update the wrist, use a custom class i made to update the encoder ranges
     public void update(){
-        updateWrist();
+        if(systemState != SystemStates.INTAKE_GRIPPERS_OPEN_SLIDES_OUT) {
+            updateWrist();
+        }
         if(slidesDownRange.getTarget() != LEFT_SLIDE_DOWN){
             slidesDownRange = new EncoderRange(LEFT_SLIDE_DOWN, SLIDES_RANGE_TOLERANCE);
         }
@@ -182,11 +192,13 @@ public class RobotV2 {
         buttonTimer.reset();
     }
 
-    public void slidesDownUpdate(){
+    public void slidesDownUpdate(boolean finishStateWhenReady){
         if(slidesDownRange.isInRange(slides.getLeftSlidePosition())){
             slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 0.2);
             slides.runRightSlideToPosition(RIGHT_SLIDE_DOWN, 0.2);
-            stateFinished = true;
+            if(finishStateWhenReady) {
+                stateFinished = true;
+            }
         }
         else {
             slides.runLeftSlideToPosition(LEFT_SLIDE_DOWN, 1);
@@ -203,28 +215,29 @@ public class RobotV2 {
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
                 if(stateTimer.seconds() > 0.5) {
-                    slidesDownUpdate();
+                    slidesDownUpdate(true);
                     intakeSlides.intakeIn();
                 }
                 break;
             case LOW_HOVER:
                 statesPath = StatesPath.REGULAR;
-                if (lastButtonPressed == 2 && stateTimer.seconds() > 1){
-                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
-                }
-                else if(lastButtonPressed != 2) {
-                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
-                }
+                //if (lastButtonPressed == 2 && stateTimer.seconds() > 1.3) {
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                //}
+                //else if(lastButtonPressed != 2) {
+                   // deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                //}
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_LOW_HOVER);
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_LOW_HOVER);
                 intakeSlides.intakeOut();
-                slidesDownUpdate();
+                slidesDownUpdate(false);
                 grippers.setPosition(constants.GRIPPERS_OPEN);
                 if(getStateTimerSeconds() > 1.5){
                     stateFinished = true;
                     break;
                 }
+                slowmode = true;
                 break;
             case DOWN_ON_SAMPLE:
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
@@ -236,6 +249,7 @@ public class RobotV2 {
                 if(stateTimer.seconds() > 0.35 && lastButtonPressed == 1){
                     setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB);
                 }
+                slowmode = true;
                 break;
             case DOWN_ON_SAMPLE_GRAB:
                 grippers.setPosition(constants.GRIPPERS_GRAB);
@@ -247,33 +261,40 @@ public class RobotV2 {
                 wrist.setPosition(constants.WRIST_CENTER);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
-                if(getStateTimerSeconds() > 1){
+                if(getStateTimerSeconds() > 0.7){
                     setSystemState(SystemStates.SLIDES_IN);
                 }
+                slowmode = false;
                 break;
             case SLIDES_IN:
+                wrist.setPosition(constants.WRIST_CENTER);
+                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                 intakeSlides.intakeAllTheWayIn();
-                if(getStateTimerSeconds() > 0.75){
+                if(getStateTimerSeconds() > 0.45){
                     setSystemState(SystemStates.DELIVERY_GRIPPERS_CLOSED);
                 }
                 break;
             case DELIVERY_GRIPPERS_CLOSED:
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                if(getStateTimerSeconds() > 0.5){
+                if(getStateTimerSeconds() > 0.4){
                     setSystemState(SystemStates.INTAKE_GRIPPERS_OPEN);
                 }
                 break;
             case INTAKE_GRIPPERS_OPEN:
                 grippers.setPosition(constants.GRIPPERS_OPEN);
-                if(getStateTimerSeconds() > 0.5){
+                if(getStateTimerSeconds() > 0.3){
                     setSystemState(SystemStates.INTAKE_GRIPPERS_OPEN_SLIDES_OUT);
                 }
                 break;
             case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
+                slidesDownUpdate(false);
+                deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 intakeSlides.intakeIn();
-                if(getStateTimerSeconds() > 0.2){
-                    stateFinished = true;
+                if(isGamepadReady() && gamepad1.right_bumper){
+                    setSystemState(SystemStates.DROP_TO_HUMAN_PLAYER);
                 }
+                stateFinished = true;
                 break;
             case DELIVER_HIGH_BASKET:
                 slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET, 1);
@@ -304,31 +325,64 @@ public class RobotV2 {
                 }
                 break;
             case UNDER_LOW_BAR_HOVER:
+                slowmode = true;
+                intakeSlides.intakeIn();
                 statesPath = StatesPath.UNDER_LOW_BAR;
                 grippers.setPosition(constants.GRIPPERS_OPEN);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
                 if(stateTimer.seconds() > 0.3){
-                    stateFinished = true;
+                    if(lastButtonPressed == 2){
+                        setSystemState(SystemStates.START);
+                    }
+                    else {
+                        stateFinished = true;
+                    }
                 }
                 break;
             case UNDER_LOW_BAR_SLIDES_OUT:
+                slowmode = true;
+                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
+                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
                 intakeSlides.intakeOut();
                 if(stateTimer.seconds() > 0.3){
-                    stateFinished = true;
+                    if(lastButtonPressed == 2){
+                        setSystemState(SystemStates.UNDER_LOW_BAR_HOVER);
+                    }
+                    else {
+                        stateFinished = true;
+                    }
                 }
                 break;
-            case DOWN_ON_SAMPLE_GRAB_2:
+            case DOWN_ON_SAMPLE_2:
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
                 if(stateTimer.seconds() > 0.5){
-                    grippers.setPosition(constants.GRIPPERS_GRAB);
+                    if(lastButtonPressed == 1){
+                        setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB_2);
+                    }
+                    else if (lastButtonPressed == 2){
+                        setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_OUT);
+                    }
+                    else if(lastButtonPressed == 3){
+                        stateFinished = true;
+                    }
                 }
-                if(stateTimer.seconds() > 0.8 && lastButtonPressed == 1){
-                    setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_IN_HOVER);
-                }
-                else if(stateTimer.seconds() > 0.8 && lastButtonPressed == 3){
-                    stateFinished = true;
+                break;
+            case DOWN_ON_SAMPLE_GRAB_2:
+                grippers.setPosition(constants.GRIPPERS_GRAB);
+                if(stateTimer.seconds() > 0.8) {
+                    switch (lastButtonPressed){
+                        case 1:
+                            setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_IN_HOVER);
+                            break;
+                        case 2:
+                            setSystemState(SystemStates.DOWN_ON_SAMPLE_2);
+                            break;
+                        case 3:
+                            stateFinished = true;
+                            break;
+                    }
                 }
                 break;
             case UNDER_LOW_BAR_SLIDES_IN_HOVER:
@@ -341,6 +395,10 @@ public class RobotV2 {
                     stateFinished = true;
                 }
                 break;
+            case DROP_TO_HUMAN_PLAYER:
+                deliveryAxon.setPosition(constants.DELIVERY_WALL_PICKUP);
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_GRAB);
+                break;
         }
         update();
     }
@@ -348,6 +406,7 @@ public class RobotV2 {
     //Next system state
     public void nextState(int button){
         lastButtonPressed = button;
+        lastState = systemState;
         switch (button){
             case 1: //Square (Also known as X) (Sample path)
                 if(stateFinished){
@@ -368,14 +427,23 @@ public class RobotV2 {
                         case DELIVER_HIGH_BASKET:
                             setSystemState(SystemStates.DROP_HIGH_BASKET);
                             break;
+                        case DELIVER_LOW_BASKET:
+                            setSystemState(SystemStates.DROP_LOW_BASKET);
+                            break;
                         case UNDER_LOW_BAR_HOVER:
                             setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_OUT);
                             break;
                         case UNDER_LOW_BAR_SLIDES_OUT:
+                            setSystemState(SystemStates.DOWN_ON_SAMPLE_2);
+                            break;
+                        case DOWN_ON_SAMPLE_2:
                             setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB_2);
                             break;
                         case DOWN_ON_SAMPLE_GRAB_2:
                             setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_IN_HOVER);
+                            break;
+                        case DROP_TO_HUMAN_PLAYER:
+                            setSystemState(SystemStates.START);
                             break;
                     }
                     stateTimer.reset();
@@ -386,19 +454,24 @@ public class RobotV2 {
                 //TODO: Add the reset button
                 switch (systemState){
                     case LOW_HOVER:
-                    case UNDER_LOW_BAR_HOVER:
                     case DROP_HIGH_BASKET:
+                    case DROP_LOW_BASKET:
+                    case UNDER_LOW_BAR_SLIDES_OUT:
                         setSystemState(SystemStates.START);
                         break;
+                    case DELIVER_HIGH_BASKET:
+                    case DELIVER_LOW_BASKET:
+                        setSystemState(SystemStates.INTAKE_GRIPPERS_OPEN_SLIDES_OUT);
+                        break;
                     case UNDER_LOW_BAR_SLIDES_IN_HOVER:
-                    case UNDER_LOW_BAR_SLIDES_OUT:
-                    case DOWN_ON_SAMPLE_GRAB_2:
                         setSystemState(SystemStates.UNDER_LOW_BAR_HOVER);
                         break;
                     case START:
                         break;
                     default:
-                        setSystemState(SystemStates.LOW_HOVER);
+                        if(statesPath == StatesPath.REGULAR) {
+                            setSystemState(SystemStates.LOW_HOVER);
+                        }
                         break;
                 }
                 break;
@@ -411,7 +484,7 @@ public class RobotV2 {
                         setSystemState(SystemStates.DELIVER_LOW_BASKET);
                         break;
                     case UNDER_LOW_BAR_SLIDES_OUT:
-                        setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB_2);
+                        setSystemState(SystemStates.DOWN_ON_SAMPLE_2);
                         break;
                     case LOW_HOVER:
                         setSystemState(SystemStates.DOWN_ON_SAMPLE);
@@ -433,16 +506,16 @@ public class RobotV2 {
         if(isGamepadReady() && gamepad1.dpad_down){
             switch (systemState){
                 case DELIVER_HIGH_BASKET:
-                    LEFT_SLIDE_HIGH_BASKET = LEFT_SLIDE_HIGH_BASKET + 20;
-                    RIGHT_SLIDE_HIGH_BASKET = RIGHT_SLIDE_HIGH_BASKET - 20;
+                    LEFT_SLIDE_HIGH_BASKET = LEFT_SLIDE_HIGH_BASKET + SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_HIGH_BASKET = RIGHT_SLIDE_HIGH_BASKET - SLIDES_JOG_AMOUNT;
                     break;
                 case DELIVER_LOW_BASKET:
-                    LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET + 20;
-                    RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET - 20;
+                    LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET + SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET - SLIDES_JOG_AMOUNT;
                     break;
                 case START:
-                    LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN + 20;
-                    RIGHT_SLIDE_DOWN = RIGHT_SLIDE_DOWN - 20;
+                    LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN + SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_DOWN = RIGHT_SLIDE_DOWN - SLIDES_JOG_AMOUNT;
                     break;
             }
             resetButtonTimer();
@@ -450,16 +523,17 @@ public class RobotV2 {
         else if(isGamepadReady() && gamepad1.dpad_up){
             switch (systemState){
                 case DELIVER_HIGH_BASKET:
-                    LEFT_SLIDE_HIGH_BASKET = LEFT_SLIDE_HIGH_BASKET - 20;
-                    RIGHT_SLIDE_HIGH_BASKET = RIGHT_SLIDE_HIGH_BASKET + 20;
+                    LEFT_SLIDE_HIGH_BASKET = LEFT_SLIDE_HIGH_BASKET - SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_HIGH_BASKET = RIGHT_SLIDE_HIGH_BASKET + SLIDES_JOG_AMOUNT;
                     break;
                 case DELIVER_LOW_BASKET:
-                    LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET - 20;
-                    RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET + 20;
+                    LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET - SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET + SLIDES_JOG_AMOUNT;
                     break;
                 case START:
-                    LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN - 20;
-                    RIGHT_SLIDE_DOWN = RIGHT_SLIDE_DOWN + 20;
+                    LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN - SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_DOWN = RIGHT_SLIDE_DOWN + SLIDES_JOG_AMOUNT;
+                    slidesDownRange = new EncoderRange(LEFT_SLIDE_DOWN, SLIDES_RANGE_TOLERANCE);
                     break;
             }
             resetButtonTimer();

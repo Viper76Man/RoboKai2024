@@ -10,7 +10,7 @@ public class DistanceSensorV1 {
     public HardwareMap hardwareMap;
     public void init(HardwareMap hardwareMap) {
         this.hardwareMap = hardwareMap;
-        sensor = this.hardwareMap.get(DistanceSensor.class, "distanceSensor");
+        sensor = this.hardwareMap.get(DistanceSensor.class, "distance");
     }
 
     public double getDistance(DistanceUnit unit){

@@ -1,15 +1,17 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Sensors;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+@TeleOp
 public class DistanceSensorTest extends OpMode {
-    public DistanceSensor sensor;
+    public DistanceSensorV1 sensor = new DistanceSensorV1();
     @Override
     public void init() {
-        sensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
+        sensor.init(hardwareMap);
     }
 
     @Override
