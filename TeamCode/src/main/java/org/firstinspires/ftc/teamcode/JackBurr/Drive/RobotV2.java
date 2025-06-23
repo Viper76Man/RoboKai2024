@@ -30,23 +30,25 @@ public class RobotV2 {
     public Drivetrain drivetrain = new Drivetrain();
     public RobotConstantsV1 constants = new RobotConstantsV1();
 
-    //VARIABLES
+    //Delivery slide positions and tolerance
     public int SLIDES_RANGE_TOLERANCE = 200;
+    public int LEFT_SLIDE_DOWN = 0;
+    public int RIGHT_SLIDE_DOWN = 0;
+    public int LEFT_SLIDE_HIGH_BASKET = constants.LEFT_SLIDE_HIGH_BASKET;
+    public int RIGHT_SLIDE_HIGH_BASKET = constants.RIGHT_SLIDE_HIGH_BASKET;
+    public int LEFT_SLIDE_LOW_BASKET = constants.LEFT_SLIDE_LOW_BASKET;
+    public int RIGHT_SLIDE_LOW_BASKET = constants.RIGHT_SLIDE_LOW_BASKET;
+    public int LEFT_SLIDE_HIGH_BAR = constants.LEFT_SLIDE_HIGH_BAR;
+    public int RIGHT_SLIDE_HIGH_BAR = constants.RIGHT_SLIDE_HIGH_BAR;
+
+    //VARIABLES
     public HardwareMap hardwareMap;
     public Telemetry telemetry;
     public Gamepad gamepad1;
     public ElapsedTime stateTimer = new ElapsedTime();
     public EncoderRange slidesDownRange = new EncoderRange(0, SLIDES_RANGE_TOLERANCE);
-    public boolean lastButtonPressIsTriangle = false;
+    public int lastButtonPressed = 0;
 
-
-    //Delivery slide positions
-    public int LEFT_SLIDE_DOWN = 0;
-    public int RIGHT_SLIDE_DOWN = 0;
-    public int LEFT_SLIDE_HIGH_BASKET = constants.LEFT_SLIDE_HIGH_BASKET;
-    public int RIGHT_SLIDE_HIGH_BASKET = constants.RIGHT_SLIDE_HIGH_BASKET;
-    public int LEFT_SLIDE_HIGH_BAR = constants.LEFT_SLIDE_HIGH_BAR;
-    public int RIGHT_SLIDE_HIGH_BAR = constants.RIGHT_SLIDE_HIGH_BAR;
 
     //Auto or TeleOp mode
     public enum Mode {
@@ -95,7 +97,6 @@ public class RobotV2 {
     public ElapsedTime buttonTimer = new ElapsedTime();
     public SystemStates systemState = SystemStates.START;
     public StatesPath statesPath = StatesPath.NONE;
-
 
     //Init all hardware and telemetry
     public void init(HardwareMap hardwareMap, Telemetry telemetry, Mode mode, Gamepad gamepad1){
@@ -149,6 +150,8 @@ public class RobotV2 {
         if(slidesDownRange.getTarget() != LEFT_SLIDE_DOWN){
             slidesDownRange = new EncoderRange(LEFT_SLIDE_DOWN, SLIDES_RANGE_TOLERANCE);
         }
+        //jog
+        jog();
     }
 
     //Update wrist
@@ -199,17 +202,17 @@ public class RobotV2 {
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
-                if(stateTimer.seconds() > 0.25) {
+                if(stateTimer.seconds() > 0.5) {
                     slidesDownUpdate();
                     intakeSlides.intakeIn();
                 }
                 break;
             case LOW_HOVER:
                 statesPath = StatesPath.REGULAR;
-                if (lastButtonPressIsTriangle && stateTimer.seconds() > 1){
+                if (lastButtonPressed == 2 && stateTimer.seconds() > 1){
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 }
-                else if(!lastButtonPressIsTriangle) {
+                else if(lastButtonPressed != 2) {
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 }
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
@@ -226,17 +229,18 @@ public class RobotV2 {
             case DOWN_ON_SAMPLE:
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
-                //TODO: Change this if we should wait to grab
-                if (getStateTimerSeconds() > 0.65) {
+                //TODO: Change this if we should wait to grab'
+                if(stateTimer.seconds() > 0.35){
+                    stateFinished = true;
+                }
+                if(stateTimer.seconds() > 0.35 && lastButtonPressed == 1){
                     setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB);
-                    break;
                 }
                 break;
             case DOWN_ON_SAMPLE_GRAB:
                 grippers.setPosition(constants.GRIPPERS_GRAB);
-                if(getStateTimerSeconds() > 0.3){
+                if(stateTimer.seconds() > 0.3) {
                     setSystemState(SystemStates.DIFF_UP);
-                    break;
                 }
                 break;
             case DIFF_UP:
@@ -274,7 +278,7 @@ public class RobotV2 {
             case DELIVER_HIGH_BASKET:
                 slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BASKET, 1);
                 slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET, 1);
-                if(Math.abs(slides.getLeftSlidePosition()) > (Math.abs(constants.LEFT_SLIDE_HIGH_BASKET) / 2)){
+                if(Math.abs(slides.getLeftSlidePosition()) > (Math.abs(constants.LEFT_SLIDE_HIGH_BASKET + LEFT_SLIDE_DOWN)  / 2)){
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
                 }
                 if(stateTimer.seconds() > 1.75){
@@ -282,9 +286,9 @@ public class RobotV2 {
                 }
                 break;
             case DELIVER_LOW_BASKET:
-                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_LOW_BASKET, 1);
-                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_LOW_BASKET, 1);
-                if(Math.abs(slides.getLeftSlidePosition()) > (Math.abs(constants.LEFT_SLIDE_LOW_BASKET) / 2)){
+                slides.runRightSlideToPosition(RIGHT_SLIDE_LOW_BASKET, 1);
+                slides.runLeftSlideToPosition(LEFT_SLIDE_LOW_BASKET, 1);
+                if(Math.abs(slides.getLeftSlidePosition()) > (Math.abs(LEFT_SLIDE_LOW_BASKET + LEFT_SLIDE_DOWN) / 2)){
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
                 }
                 if(stateTimer.seconds() > 1.75){
@@ -320,8 +324,11 @@ public class RobotV2 {
                 if(stateTimer.seconds() > 0.5){
                     grippers.setPosition(constants.GRIPPERS_GRAB);
                 }
-                if(stateTimer.seconds() > 0.8){
+                if(stateTimer.seconds() > 0.8 && lastButtonPressed == 1){
                     setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_IN_HOVER);
+                }
+                else if(stateTimer.seconds() > 0.8 && lastButtonPressed == 3){
+                    stateFinished = true;
                 }
                 break;
             case UNDER_LOW_BAR_SLIDES_IN_HOVER:
@@ -340,9 +347,9 @@ public class RobotV2 {
 
     //Next system state
     public void nextState(int button){
+        lastButtonPressed = button;
         switch (button){
             case 1: //Square (Also known as X) (Sample path)
-                lastButtonPressIsTriangle = false;
                 if(stateFinished){
                     switch (systemState){
                         case START:
@@ -367,6 +374,9 @@ public class RobotV2 {
                         case UNDER_LOW_BAR_SLIDES_OUT:
                             setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB_2);
                             break;
+                        case DOWN_ON_SAMPLE_GRAB_2:
+                            setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_IN_HOVER);
+                            break;
                     }
                     stateTimer.reset();
                 }
@@ -374,7 +384,6 @@ public class RobotV2 {
                 break;
             case 2: //Triangle (Reset button)
                 //TODO: Add the reset button
-                lastButtonPressIsTriangle = true;
                 switch (systemState){
                     case LOW_HOVER:
                     case UNDER_LOW_BAR_HOVER:
@@ -385,6 +394,8 @@ public class RobotV2 {
                     case UNDER_LOW_BAR_SLIDES_OUT:
                     case DOWN_ON_SAMPLE_GRAB_2:
                         setSystemState(SystemStates.UNDER_LOW_BAR_HOVER);
+                        break;
+                    case START:
                         break;
                     default:
                         setSystemState(SystemStates.LOW_HOVER);
@@ -398,6 +409,14 @@ public class RobotV2 {
                         break;
                     case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
                         setSystemState(SystemStates.DELIVER_LOW_BASKET);
+                        break;
+                    case UNDER_LOW_BAR_SLIDES_OUT:
+                        setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB_2);
+                        break;
+                    case LOW_HOVER:
+                        setSystemState(SystemStates.DOWN_ON_SAMPLE);
+                        break;
+
                 }
 
         }
@@ -410,9 +429,50 @@ public class RobotV2 {
         stateTimer.reset();
     }
 
+    public void jog(){
+        if(isGamepadReady() && gamepad1.dpad_down){
+            switch (systemState){
+                case DELIVER_HIGH_BASKET:
+                    LEFT_SLIDE_HIGH_BASKET = LEFT_SLIDE_HIGH_BASKET + 20;
+                    RIGHT_SLIDE_HIGH_BASKET = RIGHT_SLIDE_HIGH_BASKET - 20;
+                    break;
+                case DELIVER_LOW_BASKET:
+                    LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET + 20;
+                    RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET - 20;
+                    break;
+                case START:
+                    LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN + 20;
+                    RIGHT_SLIDE_DOWN = RIGHT_SLIDE_DOWN - 20;
+                    break;
+            }
+            resetButtonTimer();
+        }
+        else if(isGamepadReady() && gamepad1.dpad_up){
+            switch (systemState){
+                case DELIVER_HIGH_BASKET:
+                    LEFT_SLIDE_HIGH_BASKET = LEFT_SLIDE_HIGH_BASKET - 20;
+                    RIGHT_SLIDE_HIGH_BASKET = RIGHT_SLIDE_HIGH_BASKET + 20;
+                    break;
+                case DELIVER_LOW_BASKET:
+                    LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET - 20;
+                    RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET + 20;
+                    break;
+                case START:
+                    LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN - 20;
+                    RIGHT_SLIDE_DOWN = RIGHT_SLIDE_DOWN + 20;
+                    break;
+            }
+            resetButtonTimer();
+        }
+    }
+
     //get state timer time
     public double getStateTimerSeconds(){
         return stateTimer.seconds();
+    }
+
+    public void resetStateTimer(){
+        stateTimer.reset();
     }
 
     //Log system states
@@ -420,7 +480,9 @@ public class RobotV2 {
         telemetry.addLine("System State: " + systemState.name());
         telemetry.addLine();
         telemetry.addLine("Left Position: " + slides.getLeftSlidePosition());
+        telemetry.addLine("Left Target: " + LEFT_SLIDE_DOWN);
         telemetry.addLine("Right Position: " + slides.getRightSlidePosition());
+        telemetry.addLine("Right Target: " + RIGHT_SLIDE_DOWN);
         telemetry.addLine("Difference: " + (Math.abs(slides.getLeftSlidePosition()) - Math.abs(slides.getRightSlidePosition())));
         if(stateFinished){
             telemetry.addLine("STATE FINISHED");

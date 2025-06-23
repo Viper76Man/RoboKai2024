@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-@TeleOp
+@TeleOp(group = "Testing")
 public class DeliveryAxonTest extends OpMode {
     public Servo axon;
     public ElapsedTime buttonTimer = new ElapsedTime();

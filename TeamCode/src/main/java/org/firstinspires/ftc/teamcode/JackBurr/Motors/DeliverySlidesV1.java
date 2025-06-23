@@ -26,8 +26,6 @@ public class DeliverySlidesV1 {
         this.hardwareMap = hardwareMap;
         leftSlide = hardwareMap.get(DcMotor.class, "deliverySlideL");
         rightSlide = hardwareMap.get(DcMotor.class, "deliverySlideR");
-        leftSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftController = new PIDController(kP, kI, kD);

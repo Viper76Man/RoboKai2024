@@ -12,6 +12,11 @@ public class TeleOpV3 extends OpMode {
     }
 
     @Override
+    public void start(){
+        robotv2.resetStateTimer();
+    }
+
+    @Override
     public void loop() {
         //DRIVE
         robotv2.drive();
