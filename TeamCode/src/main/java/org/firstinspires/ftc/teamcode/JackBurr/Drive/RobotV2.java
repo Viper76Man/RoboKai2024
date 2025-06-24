@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PinpointV1;
@@ -81,6 +82,7 @@ public class RobotV2 {
        INTAKE_GRIPPERS_OPEN_SLIDES_OUT,
        DROP_TO_HUMAN_PLAYER,
        DELIVER_HIGH_BAR,
+       CLIP_HIGH_BAR,
        DELIVER_HIGH_BASKET,
        DROP_HIGH_BASKET,
        DELIVER_LOW_BASKET,
@@ -209,14 +211,18 @@ public class RobotV2 {
     public void systemStatesUpdate(){
         switch (systemState){
             case START:
+                slowmode = false;
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 wrist.setPosition(constants.WRIST_CENTER);
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
                 if(stateTimer.seconds() > 0.5) {
-                    slidesDownUpdate(true);
+                    slidesDownUpdate(false);
                     intakeSlides.intakeIn();
+                }
+                if(stateTimer.seconds() > 0.8){
+                    stateFinished = true;
                 }
                 break;
             case LOW_HOVER:
@@ -233,7 +239,7 @@ public class RobotV2 {
                 intakeSlides.intakeOut();
                 slidesDownUpdate(false);
                 grippers.setPosition(constants.GRIPPERS_OPEN);
-                if(getStateTimerSeconds() > 1.5){
+                if(getStateTimerSeconds() > 1){
                     stateFinished = true;
                     break;
                 }
@@ -325,7 +331,7 @@ public class RobotV2 {
                 }
                 break;
             case UNDER_LOW_BAR_HOVER:
-                slowmode = true;
+                slowmode = false;
                 intakeSlides.intakeIn();
                 statesPath = StatesPath.UNDER_LOW_BAR;
                 grippers.setPosition(constants.GRIPPERS_OPEN);
@@ -399,6 +405,24 @@ public class RobotV2 {
                 deliveryAxon.setPosition(constants.DELIVERY_WALL_PICKUP);
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_GRAB);
                 break;
+            case DELIVER_HIGH_BAR:
+                intakeSlides.intakeOut();
+                slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BAR, 1);
+                slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BAR,1);
+                deliveryAxon.setPosition(constants.DELIVERY_FLAT);
+                telemetry.addLine(distanceSensor.getDistance(DistanceUnit.INCH) + " inches");
+                break;
+            case CLIP_HIGH_BAR:
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP, 1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_CLIP,1);
+                if(stateTimer.seconds() > 1){
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                    deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                }
+                if(stateTimer.seconds() > 1.5){
+                    setSystemState(SystemStates.START);
+                }
+                break;
         }
         update();
     }
@@ -445,18 +469,21 @@ public class RobotV2 {
                         case DROP_TO_HUMAN_PLAYER:
                             setSystemState(SystemStates.START);
                             break;
+                        case DELIVER_HIGH_BAR:
+                            setSystemState(SystemStates.CLIP_HIGH_BAR);
+                            break;
                     }
                     stateTimer.reset();
                 }
                 stateFinished = false;
                 break;
             case 2: //Triangle (Reset button)
-                //TODO: Add the reset button
                 switch (systemState){
                     case LOW_HOVER:
                     case DROP_HIGH_BASKET:
                     case DROP_LOW_BASKET:
                     case UNDER_LOW_BAR_SLIDES_OUT:
+                    case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
                         setSystemState(SystemStates.START);
                         break;
                     case DELIVER_HIGH_BASKET:
@@ -465,6 +492,9 @@ public class RobotV2 {
                         break;
                     case UNDER_LOW_BAR_SLIDES_IN_HOVER:
                         setSystemState(SystemStates.UNDER_LOW_BAR_HOVER);
+                        break;
+                    case CLIP_HIGH_BAR:
+                        setSystemState(SystemStates.DELIVER_HIGH_BAR);
                         break;
                     case START:
                         break;
@@ -491,6 +521,14 @@ public class RobotV2 {
                         break;
 
                 }
+            case 4:
+                switch (systemState){
+                    case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
+                        setSystemState(SystemStates.DELIVER_HIGH_BAR);
+                        break;
+                    default:
+                        break;
+                }
 
         }
     }
@@ -513,6 +551,10 @@ public class RobotV2 {
                     LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET + SLIDES_JOG_AMOUNT;
                     RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET - SLIDES_JOG_AMOUNT;
                     break;
+                case DELIVER_HIGH_BAR:
+                    LEFT_SLIDE_HIGH_BAR = LEFT_SLIDE_HIGH_BAR + SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_HIGH_BAR = RIGHT_SLIDE_HIGH_BAR - SLIDES_JOG_AMOUNT;
+                    break;
                 case START:
                     LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN + SLIDES_JOG_AMOUNT;
                     RIGHT_SLIDE_DOWN = RIGHT_SLIDE_DOWN - SLIDES_JOG_AMOUNT;
@@ -529,6 +571,10 @@ public class RobotV2 {
                 case DELIVER_LOW_BASKET:
                     LEFT_SLIDE_LOW_BASKET = LEFT_SLIDE_LOW_BASKET - SLIDES_JOG_AMOUNT;
                     RIGHT_SLIDE_LOW_BASKET = RIGHT_SLIDE_LOW_BASKET + SLIDES_JOG_AMOUNT;
+                    break;
+                case DELIVER_HIGH_BAR:
+                    LEFT_SLIDE_HIGH_BAR = LEFT_SLIDE_HIGH_BAR - SLIDES_JOG_AMOUNT;
+                    RIGHT_SLIDE_HIGH_BAR = RIGHT_SLIDE_HIGH_BAR + SLIDES_JOG_AMOUNT;
                     break;
                 case START:
                     LEFT_SLIDE_DOWN = LEFT_SLIDE_DOWN - SLIDES_JOG_AMOUNT;

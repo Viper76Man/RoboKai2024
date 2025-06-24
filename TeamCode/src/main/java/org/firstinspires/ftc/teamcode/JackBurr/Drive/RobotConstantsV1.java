@@ -35,7 +35,7 @@ public class RobotConstantsV1 {
     public double DELIVERY_HIGH_BAR = 0.475; //0.56
     public double DELIVERY_CLIP = 0.515; //0.76
     public double DELIVERY_WALL_PICKUP = 0.69; //0.755
-    public double DELIVERY_FLICK = 0.3;
+    public double DELIVERY_FLAT = 0.69;
     public double WRIST_CENTER = 0.21;
     //MOTORS=========================================================================================================
     public int INTAKE_IN = 52;
@@ -46,12 +46,12 @@ public class RobotConstantsV1 {
     public int RIGHT_SLIDE_HIGH_BASKET = 3195;
     public int LEFT_SLIDE_LOW_BASKET = -1582;
     public int RIGHT_SLIDE_LOW_BASKET = 1582;
-    public int LEFT_SLIDE_HIGH_BAR = -468;
-    public int RIGHT_SLIDE_HIGH_BAR = 468;
+    public int LEFT_SLIDE_HIGH_BAR = -1800;
+    public int RIGHT_SLIDE_HIGH_BAR = 1800;
     public int LEFT_SLIDE_HIGH_BAR_AUTO = -698;
     public int RIGHT_SLIDE_HIGH_BAR_AUTO = 698;
-    public int LEFT_SLIDE_HIGH_BAR_CLIP_AUTO = -663;
-    public int RIGHT_SLIDE_HIGH_BAR_CLIP_AUTO = 663;
+    public int LEFT_SLIDE_HIGH_BAR_CLIP = -1000;
+    public int RIGHT_SLIDE_HIGH_BAR_CLIP = 1000;
     public int LEFT_SLIDE_LEVEL_TWO_ASCENT = -3370;
     public int RIGHT_SLIDE_LEVEL_TWO_ASCENT = 3370;
     public int LEFT_SLIDE_LEVEL_TWO_ASCENT_HOOK = -629;
@@ -70,4 +70,5 @@ public class RobotConstantsV1 {
     public int GRIPPERS_OPEN_TARGET = 0;
     //==============================================================================================================
     public double BUTTON_PRESS_DELAY = 0.3;
+    public double SPEC_TARGET_DISTANCE = 12.4;
 }

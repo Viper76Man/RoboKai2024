@@ -21,11 +21,11 @@ public class TeleOpV3 extends OpMode {
         //DRIVE
         robotv2.drive();
         robotv2.systemStatesUpdate();
-        if(robotv2.isGamepadReady() && gamepad1.options){
-            robotv2.toggleSlowMode();
-            robotv2.resetButtonTimer();
-        }
-        else if(robotv2.isGamepadReady() && gamepad1.square){
+        //if(robotv2.isGamepadReady() && gamepad1.options){
+            //robotv2.toggleSlowMode();
+            //robotv2.resetButtonTimer();
+        //}
+        if(robotv2.isGamepadReady() && gamepad1.square){
             robotv2.nextState(1);
             robotv2.resetButtonTimer();
         }
@@ -35,6 +35,10 @@ public class TeleOpV3 extends OpMode {
         }
         else if(robotv2.isGamepadReady() && gamepad1.circle) {
             robotv2.nextState(3);
+            robotv2.resetButtonTimer();
+        }
+        else if(robotv2.isGamepadReady() && gamepad1.cross){
+            robotv2.nextState(4);
             robotv2.resetButtonTimer();
         }
         robotv2.logStates();
