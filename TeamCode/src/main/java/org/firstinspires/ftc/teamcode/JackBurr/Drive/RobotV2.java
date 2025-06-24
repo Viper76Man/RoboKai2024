@@ -36,6 +36,7 @@ public class RobotV2 {
     //Delivery slide positions and tolerance, jog variable
     public int SLIDES_RANGE_TOLERANCE = 600;
     public int SLIDES_JOG_AMOUNT = 20;
+    public int DISTANCE_TOLERANCE = 3;
 
     public int LEFT_SLIDE_DOWN = 0;
     public int RIGHT_SLIDE_DOWN = 0;
@@ -51,7 +52,9 @@ public class RobotV2 {
     public Telemetry telemetry;
     public Gamepad gamepad1;
     public ElapsedTime stateTimer = new ElapsedTime();
+    public ElapsedTime rumbleTimer = new ElapsedTime();
     public EncoderRange slidesDownRange = new EncoderRange(0, SLIDES_RANGE_TOLERANCE);
+    public EncoderRange distanceRange = new EncoderRange(constants.SPEC_TARGET_DISTANCE, DISTANCE_TOLERANCE);
     public int lastButtonPressed = 0;
 
 
@@ -347,6 +350,7 @@ public class RobotV2 {
                 }
                 break;
             case UNDER_LOW_BAR_SLIDES_OUT:
+                rumbleTimer.reset();
                 slowmode = true;
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
@@ -411,6 +415,12 @@ public class RobotV2 {
                 slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BAR,1);
                 deliveryAxon.setPosition(constants.DELIVERY_FLAT);
                 telemetry.addLine(distanceSensor.getDistance(DistanceUnit.INCH) + " inches");
+                if(distanceRange.isInRange(distanceSensor.getDistance(DistanceUnit.INCH)) && rumbleTimer.seconds() > 1){
+                    gamepad1.rumble(1000);
+                }
+                else if(!distanceRange.isInRange(distanceSensor.getDistance(DistanceUnit.INCH))) {
+                    rumbleTimer.reset();
+                }
                 break;
             case CLIP_HIGH_BAR:
                 slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP, 1);
