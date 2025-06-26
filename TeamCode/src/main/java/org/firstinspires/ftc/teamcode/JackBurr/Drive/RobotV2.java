@@ -85,12 +85,16 @@ public class RobotV2 {
        INTAKE_GRIPPERS_OPEN, //Timers move to next state
        INTAKE_GRIPPERS_OPEN_SLIDES_OUT,
        DROP_TO_HUMAN_PLAYER,
+       //High chamber
        DELIVER_HIGH_BAR,
        CLIP_HIGH_BAR,
+       //High basket
        DELIVER_HIGH_BASKET,
        DROP_HIGH_BASKET,
+       //Low basket
        DELIVER_LOW_BASKET,
        DROP_LOW_BASKET,
+       //Hang
        HOOK_HIGH_RUNG,
        HANG
    }
@@ -406,8 +410,8 @@ public class RobotV2 {
                 }
                 break;
             case UNDER_LOW_BAR_SLIDES_IN_HOVER:
-                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_HOVER);
-                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_HOVER);
+                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_OVER_LOW_BAR);
+                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_OVER_LOW_BAR);
                 if(stateTimer.seconds() > 0.5){
                     intakeSlides.intakeIn();
                 }

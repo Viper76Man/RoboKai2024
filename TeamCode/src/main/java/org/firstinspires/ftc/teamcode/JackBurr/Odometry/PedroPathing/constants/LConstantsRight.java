@@ -9,7 +9,7 @@ public class LConstantsRight {
     static {
         PinpointConstants.forwardY = -1.5;
         PinpointConstants.strafeX = -6.75;
-        PinpointConstants.distanceUnit = DistanceUnit.MM;
+        PinpointConstants.distanceUnit = DistanceUnit.INCH;
         PinpointConstants.hardwareMapName = "odo";
         PinpointConstants.useYawScalar = false;
         PinpointConstants.yawScalar = 1.0;

@@ -1,4 +1,4 @@
-//TODO: Refactor
+//Work in progress, thanks to Monkey Machina 26433 for the original file
 
 package org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.examples;
 
@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstantsLeft;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstantsRight;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.LConstants;
+import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.LConstantsRight;
 
 @Autonomous
 public class SpecimenAutoV4 extends OpMode {
@@ -65,9 +66,14 @@ public class SpecimenAutoV4 extends OpMode {
         // Pedro & Path Setup
         SpecimenAutoPaths.build();
 
-        Constants.setConstants(FConstantsLeft.class, LConstants.class);
+        Constants.setConstants(FConstantsLeft.class, LConstantsRight.class);
         follower = new Follower(hardwareMap);
-
+        robot.pinpoint.resetPosAndIMU();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         follower.setStartingPose(SpecimenAutoPaths.startPose);
         dashboardPoseTracker = new DashboardPoseTracker(follower.poseUpdater);
         Drawing.drawRobot(follower.poseUpdater.getPose(), "#4CAF50");
@@ -97,10 +103,16 @@ public class SpecimenAutoV4 extends OpMode {
     }
 
     @Override
+    public void start(){
+        robot.setSystemState(RobotV2.SystemStates.START);
+        robot.resetStateTimer();
+    }
+
+    @Override
     public void loop() {
         autoStateUpdate();
         telemetry.addLine(autoState.name());
-        robot.update();
+        robot.systemStatesUpdate();
         controller.readButtons();
         dashboardPoseTracker.update();
 
@@ -312,7 +324,7 @@ public class SpecimenAutoV4 extends OpMode {
 
     private void depositSpec(PathChain nextPath, AutoState nextAutoState) {
 
-        follower.setCentripetalScaling(0.002);
+        //follower.setCentripetalScaling(0.002);
         // If Vx meets velocity constraint and the path did not just start (t>=0.1) and specDepoStatus is driving, move to releasing status
         if ((!follower.isBusy() || (Math.abs(follower.getVelocity().getXComponent()) <= 1 && follower.getCurrentTValue() >= 0.8)) && specDepoStatus == SpecDepoStatus.driving) {
             // if ((!follower.isBusy()) && specDepoStatus == SpecDepoStatus.driving) {
@@ -324,12 +336,11 @@ public class SpecimenAutoV4 extends OpMode {
         }
 
         // If the claw is open and specDepoStatus is releasing, move to next path.
-        if (specDepoStatus == SpecDepoStatus.releasing && robot.stateTimer.seconds() > 4) {
+        if (specDepoStatus == SpecDepoStatus.releasing && robot.stateTimer.seconds() > 4 && !follower.isBusy()) {
             follower.followPath(nextPath);
             autoState = nextAutoState;
             specDepoStatus = SpecDepoStatus.driving;
-            follower.setCentripetalScaling(0.0012);
+            //follower.setCentripetalScaling(0.0012);
         }
-
     }
 }
