@@ -206,13 +206,13 @@ public class SpecimenAutoV3 extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case GO_TO_SUBMERSIBLE:
-                if(!follower.isBusy()){
+                if(!follower.isBusy()) {
                     follower.followPath(scorePreload);
-                    if(follower.getPose().getX() > tosubmersiblePose.getX()) {
-                        setPathState(PathState.RELEASE_AND_BACK);
-                        actionTimer.reset();
-                        actionStateSet = false;
-                    }
+                }
+                if(follower.getPose().getX() >= tosubmersiblePose.getX()) {
+                    setPathState(PathState.RELEASE_AND_BACK);
+                    actionTimer.reset();
+                    actionStateSet = false;
                 }
                 break;
             case RELEASE_AND_BACK:
