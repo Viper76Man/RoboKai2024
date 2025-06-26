@@ -65,15 +65,11 @@ public class SpecimenAutoV4 extends OpMode {
     public void init() {
         // Pedro & Path Setup
         SpecimenAutoPaths.build();
-
+        controller = new GamepadEx(gamepad1);
+        robot = new RobotV2();
+        robot.init(hardwareMap, telemetry, RobotV2.Mode.AUTO, gamepad1);
         Constants.setConstants(FConstantsLeft.class, LConstantsRight.class);
         follower = new Follower(hardwareMap);
-        robot.pinpoint.resetPosAndIMU();
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         follower.setStartingPose(SpecimenAutoPaths.startPose);
         dashboardPoseTracker = new DashboardPoseTracker(follower.poseUpdater);
         Drawing.drawRobot(follower.poseUpdater.getPose(), "#4CAF50");
@@ -85,13 +81,9 @@ public class SpecimenAutoV4 extends OpMode {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        robot.deliveryGrippers.setPosition(robot.constants.DELIVERY_GRIPPERS_CLOSE);
 
         // Robot Setup
-
-        controller = new GamepadEx(gamepad1);
-
-        robot = new RobotV2();
-        robot.init(hardwareMap, telemetry, RobotV2.Mode.AUTO, gamepad1);
 
     }
 
@@ -104,8 +96,9 @@ public class SpecimenAutoV4 extends OpMode {
 
     @Override
     public void start(){
-        robot.setSystemState(RobotV2.SystemStates.START);
         robot.resetStateTimer();
+        robot.setSystemState(RobotV2.SystemStates.DELIVER_HIGH_BAR);
+        robot.grippers.setPosition(robot.constants.GRIPPERS_CLOSE);
     }
 
     @Override
@@ -129,11 +122,12 @@ public class SpecimenAutoV4 extends OpMode {
     public void autoStateUpdate() {
         switch (autoState) {
             case start:
-                robot.grippers.setPosition(robot.constants.GRIPPERS_CLOSE);
                 //if (robot.deposit.claw.currentState == Claw.State.Closed) {
                 //robot.setDepositDesiredState(Deposit.State.specDeposit);
-                follower.followPath(specDepoOnePC, true);
-                autoState = AutoState.specDepoOne;
+                if(robot.stateTimer.seconds() > 4) {
+                    follower.followPath(specDepoOnePC, true);
+                    autoState = AutoState.specDepoOne;
+                }
                 //}
                 break;
 
@@ -326,7 +320,7 @@ public class SpecimenAutoV4 extends OpMode {
 
         //follower.setCentripetalScaling(0.002);
         // If Vx meets velocity constraint and the path did not just start (t>=0.1) and specDepoStatus is driving, move to releasing status
-        if ((!follower.isBusy() || (Math.abs(follower.getVelocity().getXComponent()) <= 1 && follower.getCurrentTValue() >= 0.8)) && specDepoStatus == SpecDepoStatus.driving) {
+        if ((!follower.isBusy() || (Math.abs(follower.getVelocity().getXComponent()) <= 1 && follower.getCurrentTValue() >= 0.5)) && specDepoStatus == SpecDepoStatus.driving) {
             // if ((!follower.isBusy()) && specDepoStatus == SpecDepoStatus.driving) {
             robot.grippers.setPosition(robot.constants.GRIPPERS_OPEN);
             specDepoStatus = SpecDepoStatus.releasing;

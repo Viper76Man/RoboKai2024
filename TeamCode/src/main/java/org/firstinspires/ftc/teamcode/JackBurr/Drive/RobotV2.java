@@ -35,6 +35,7 @@ public class RobotV2 {
     public int SLIDES_RANGE_TOLERANCE = 600;
     public int SLIDES_JOG_AMOUNT = 20;
     public double DISTANCE_TOLERANCE = 0.75;
+    public int SLIDES_UP_RANGE_TOLERANCE = 150;
 
     public int LEFT_SLIDE_DOWN = 0;
     public int RIGHT_SLIDE_DOWN = 0;
@@ -56,6 +57,7 @@ public class RobotV2 {
     public ElapsedTime rumbleTimer = new ElapsedTime();
     public EncoderRange slidesDownRange = new EncoderRange(0, SLIDES_RANGE_TOLERANCE);
     public EncoderRange distanceRange = new EncoderRange(constants.SPEC_TARGET_DISTANCE, DISTANCE_TOLERANCE);
+    public EncoderRange highBasketRange = new EncoderRange(constants.LEFT_SLIDE_HIGH_BASKET, SLIDES_UP_RANGE_TOLERANCE);
     public int lastButtonPressed = 0;
 
 
@@ -96,7 +98,9 @@ public class RobotV2 {
        DROP_LOW_BASKET,
        //Hang
        HOOK_HIGH_RUNG,
-       HANG
+       HANG,
+       //LEVEL ONE
+       LEVEL_ONE_ASCENT
    }
 
    //Helps decide where to go back to when triangle is pressed
@@ -122,26 +126,29 @@ public class RobotV2 {
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
         this.gamepad1 = gamepad1;
-        initHardwareClasses();
         switch (mode){
             case AUTO:
+                initHardwareClasses(true);
                 zero();
-                pinpoint.resetPosAndIMU();
+                //pinpoint.resetPosAndIMU();
                 break;
             case TELEOP:
+                initHardwareClasses(false);
                 break;
         }
     }
 
     //Init all hardware classes
-    public void initHardwareClasses(){
+    public void initHardwareClasses(boolean auto){
         //Init all hardware classes
         slides.init(hardwareMap);
         deliveryGrippers.init(hardwareMap);
         intakeSlides.init(hardwareMap);
         deliveryAxon.init(hardwareMap);
         pinpoint.init(hardwareMap);
-        drivetrain.init(hardwareMap);
+        if(!auto) {
+            drivetrain.init(hardwareMap);
+        }
         wrist.init(hardwareMap);
         diffV2.init(hardwareMap);
         grippers.init(hardwareMap);
@@ -325,7 +332,7 @@ public class RobotV2 {
                 if(Math.abs(slides.getLeftSlidePosition()) > (Math.abs(constants.LEFT_SLIDE_HIGH_BASKET + LEFT_SLIDE_DOWN)  / 2)){
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
                 }
-                if(stateTimer.seconds() > 1.75){
+                if(highBasketRange.isInRange(Math.abs(slides.getLeftSlidePosition()))){
                     stateFinished = true;
                 }
                 break;
@@ -424,6 +431,7 @@ public class RobotV2 {
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_GRAB);
                 break;
             case DELIVER_HIGH_BAR:
+                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                 intakeSlides.intakeIn();
                 slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BAR, 1);
                 slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BAR,1);
@@ -455,6 +463,9 @@ public class RobotV2 {
                 slides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT, 1);
                 slides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT, 1);
                 intakeSlides.intakeAllTheWayIn();
+                break;
+            case LEVEL_ONE_ASCENT:
+                deliveryAxon.setPosition(constants.DELIVERY_AXON_STRAIGHT_UP);
                 break;
         }
         update();
