@@ -91,7 +91,8 @@ public class RobotV2 {
        DROP_HIGH_BASKET,
        DELIVER_LOW_BASKET,
        DROP_LOW_BASKET,
-
+       HOOK_HIGH_RUNG,
+       HANG
    }
 
    //Helps decide where to go back to when triangle is pressed
@@ -232,6 +233,9 @@ public class RobotV2 {
                 }
                 if(stateTimer.seconds() > 0.8){
                     stateFinished = true;
+                }
+                if(gamepad1.left_trigger !=0){
+                    setSystemState(SystemStates.HOOK_HIGH_RUNG);
                 }
                 break;
             case LOW_HOVER:
@@ -439,6 +443,15 @@ public class RobotV2 {
                     setSystemState(SystemStates.START);
                 }
                 break;
+            case HOOK_HIGH_RUNG:
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT_HOOK, 1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT_HOOK, 1);
+                break;
+            case HANG:
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT, 1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT, 1);
+                intakeSlides.intakeAllTheWayIn();
+                break;
         }
         update();
     }
@@ -488,6 +501,9 @@ public class RobotV2 {
                         case DELIVER_HIGH_BAR:
                             setSystemState(SystemStates.CLIP_HIGH_BAR);
                             break;
+                        case HOOK_HIGH_RUNG:
+                            setSystemState(SystemStates.HANG);
+                            break;
                     }
                     stateTimer.reset();
                 }
@@ -501,6 +517,7 @@ public class RobotV2 {
                     case UNDER_LOW_BAR_SLIDES_OUT:
                     case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
                     case DELIVER_HIGH_BAR:
+                    case HOOK_HIGH_RUNG:
                         setSystemState(SystemStates.START);
                         break;
                     case DELIVER_HIGH_BASKET:
@@ -514,6 +531,9 @@ public class RobotV2 {
                         setSystemState(SystemStates.DELIVER_HIGH_BAR);
                         break;
                     case START:
+                        break;
+                    case HANG:
+                        setSystemState(SystemStates.HOOK_HIGH_RUNG);
                         break;
                     default:
                         if(statesPath == StatesPath.REGULAR) {
