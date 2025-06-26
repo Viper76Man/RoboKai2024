@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.JackBurr.Drive;
 
-import android.view.contentcapture.DataRemovalRequest;
-
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -36,7 +34,7 @@ public class RobotV2 {
     //Delivery slide positions and tolerance, jog variable
     public int SLIDES_RANGE_TOLERANCE = 600;
     public int SLIDES_JOG_AMOUNT = 20;
-    public int DISTANCE_TOLERANCE = 3;
+    public double DISTANCE_TOLERANCE = 0.75;
 
     public int LEFT_SLIDE_DOWN = 0;
     public int RIGHT_SLIDE_DOWN = 0;
@@ -46,6 +44,9 @@ public class RobotV2 {
     public int RIGHT_SLIDE_LOW_BASKET = constants.RIGHT_SLIDE_LOW_BASKET;
     public int LEFT_SLIDE_HIGH_BAR = constants.LEFT_SLIDE_HIGH_BAR;
     public int RIGHT_SLIDE_HIGH_BAR = constants.RIGHT_SLIDE_HIGH_BAR;
+
+    public int GAMEPAD_RUMBLE_DELAY_SECONDS = 1;
+    public int GAMEPAD_RUMBLE_MS = 1000;
 
     //VARIABLES
     public HardwareMap hardwareMap;
@@ -70,7 +71,7 @@ public class RobotV2 {
        //SAMPLES ONLY
        LOW_HOVER,
        DOWN_ON_SAMPLE, //Timers move to next state
-       DOWN_ON_SAMPLE_GRAB, //TODO: Find put if Liam wants it to go straight from grab to transfer
+       DOWN_ON_SAMPLE_GRAB,
        //LOW BAR ONLY
        UNDER_LOW_BAR_HOVER,
        UNDER_LOW_BAR_SLIDES_OUT,
@@ -89,7 +90,8 @@ public class RobotV2 {
        DELIVER_HIGH_BASKET,
        DROP_HIGH_BASKET,
        DELIVER_LOW_BASKET,
-       DROP_LOW_BASKET
+       DROP_LOW_BASKET,
+
    }
 
    //Helps decide where to go back to when triangle is pressed
@@ -159,8 +161,12 @@ public class RobotV2 {
 
     //Update the wrist, use a custom class i made to update the encoder ranges
     public void update(){
-        if(systemState != SystemStates.INTAKE_GRIPPERS_OPEN_SLIDES_OUT) {
-            updateWrist();
+        switch (systemState){
+            case UNDER_LOW_BAR_SLIDES_OUT:
+            case UNDER_LOW_BAR_HOVER:
+            case LOW_HOVER:
+                updateWrist();
+                break;
         }
         if(slidesDownRange.getTarget() != LEFT_SLIDE_DOWN){
             slidesDownRange = new EncoderRange(LEFT_SLIDE_DOWN, SLIDES_RANGE_TOLERANCE);
@@ -410,13 +416,13 @@ public class RobotV2 {
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_GRAB);
                 break;
             case DELIVER_HIGH_BAR:
-                intakeSlides.intakeOut();
+                intakeSlides.intakeIn();
                 slides.runLeftSlideToPosition(LEFT_SLIDE_HIGH_BAR, 1);
                 slides.runRightSlideToPosition(RIGHT_SLIDE_HIGH_BAR,1);
                 deliveryAxon.setPosition(constants.DELIVERY_FLAT);
                 telemetry.addLine(distanceSensor.getDistance(DistanceUnit.INCH) + " inches");
-                if(distanceRange.isInRange(distanceSensor.getDistance(DistanceUnit.INCH)) && rumbleTimer.seconds() > 1){
-                    gamepad1.rumble(1000);
+                if(distanceRange.isInRange(distanceSensor.getDistance(DistanceUnit.INCH)) && rumbleTimer.seconds() > GAMEPAD_RUMBLE_DELAY_SECONDS){
+                    gamepad1.rumble(GAMEPAD_RUMBLE_MS);
                 }
                 else if(!distanceRange.isInRange(distanceSensor.getDistance(DistanceUnit.INCH))) {
                     rumbleTimer.reset();
@@ -494,6 +500,7 @@ public class RobotV2 {
                     case DROP_LOW_BASKET:
                     case UNDER_LOW_BAR_SLIDES_OUT:
                     case INTAKE_GRIPPERS_OPEN_SLIDES_OUT:
+                    case DELIVER_HIGH_BAR:
                         setSystemState(SystemStates.START);
                         break;
                     case DELIVER_HIGH_BASKET:

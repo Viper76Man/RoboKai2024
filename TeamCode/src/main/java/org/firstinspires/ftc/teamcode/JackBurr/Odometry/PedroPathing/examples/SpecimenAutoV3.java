@@ -92,6 +92,7 @@ public class SpecimenAutoV3 extends OpMode {
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(9, 63, Math.toRadians(180));
     private final Pose tosubmersiblePose = new Pose(36.5, 72, Math.toRadians(180));
+    private final Pose toSubmersibleTarget = new Pose(70.5, 72, Math.toRadians(180));
     private final Pose strafeoutPose = new Pose(30, 36, Math.toRadians(180));
     public final Pose strafeBehind1 = new Pose (60, 36, Math.toRadians(180));
     private final Pose strafebehindsample1Pose = new Pose(60, 25, Math.toRadians(180));
@@ -128,8 +129,8 @@ public class SpecimenAutoV3 extends OpMode {
 
 
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
-        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(tosubmersiblePose)));
-        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), tosubmersiblePose.getHeading());
+        scorePreload = new Path(new BezierLine(new Point(startPose), new Point(toSubmersibleTarget)));
+        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), toSubmersibleTarget.getHeading());
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         strafeOut = new Path(new BezierLine(new Point(tosubmersiblePose), new Point(strafeoutPose)));
         strafeOut.setLinearHeadingInterpolation(tosubmersiblePose.getHeading(), strafeoutPose.getHeading());
@@ -245,13 +246,14 @@ public class SpecimenAutoV3 extends OpMode {
             case GO_TO_SUBMERSIBLE:
                 if(!follower.isBusy()){
                     follower.followPath(scorePreload);
-                    setPathState(PathState.RELEASE_AND_BACK);
-                    actionTimer.reset();
-                    actionStateSet = false;
+                    if(follower.getPose().getX() > tosubmersiblePose.getX()) {
+                        setPathState(PathState.RELEASE_AND_BACK);
+                        actionTimer.reset();
+                        actionStateSet = false;
+                    }
                 }
                 break;
             case RELEASE_AND_BACK:
-                if(!follower.isBusy()) {
                     if(!actionStateSet) {
                         follower.setMaxPower(0.7);
                         setActionState(ActionState.HANG_PRELOAD);
@@ -261,10 +263,6 @@ public class SpecimenAutoV3 extends OpMode {
                         setPathState(PathState.PUSH_SAMPLE1);
                         actionStateSet = false;
                     }
-                }
-                else {
-                    actionTimer.reset();
-                }
                 break;
             case PUSH_SAMPLE1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
