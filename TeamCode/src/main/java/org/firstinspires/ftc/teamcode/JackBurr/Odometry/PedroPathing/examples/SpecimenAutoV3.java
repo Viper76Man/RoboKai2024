@@ -221,7 +221,7 @@ public class SpecimenAutoV3 extends OpMode {
                         setActionState(ActionState.HANG_PRELOAD);
                         actionStateSet = true;
                     }
-                    if (actionTimer.seconds() > 1) {
+                    if (robot.systemState == RobotV2.SystemStates.START) {
                         setPathState(PathState.PUSH_SAMPLE1);
                         actionStateSet = false;
                     }
