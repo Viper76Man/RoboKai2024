@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotConstantsV1;
+import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstantsLeft;
@@ -31,7 +32,7 @@ public class SpecimenAutoV3 extends OpMode {
 
     private Follower follower;
     private ElapsedTime pathTimer, actionTimer, opmodeTimer;
-
+    public RobotV2 robot = new RobotV2();
     public IntakeSlidesV1 intakeSlides = new IntakeSlidesV1();
     public DifferentialV2 diffV2 = new DifferentialV2();
     public GrippersV1 grippers = new GrippersV1();
@@ -172,69 +173,30 @@ public class SpecimenAutoV3 extends OpMode {
     public void autonomousActionUpdate(){
         switch (actionState){
             case DELIVERY_POSITION:
-                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                if(actionTimer.seconds() < 4 && actionTimer.milliseconds() > 200) {
-                    deliveryAxon.setPosition(constants.DELIVERY_CLIP);
-                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO, 1);
-                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO, 1);
-                }
-                if(actionTimer.seconds() > 1) {
-                    if(!pathStateSet2) {
-                        setPathState(PathState.GO_TO_SUBMERSIBLE);
-                        pathStateSet2 = true;
-                    }
-                }
+                robot.setSystemState(RobotV2.SystemStates.DELIVER_HIGH_BAR);
                 break;
             case HANG_PRELOAD:
-                //slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP_AUTO, 1);
-                //slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_CLIP_AUTO, 1);
-                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                robot.setSystemState(RobotV2.SystemStates.CLIP_HIGH_BAR);
                 break;
             case TRAVEL:
-                slides.runLeftSlideToPosition(0, 1);
-                slides.runRightSlideToPosition(0, 1);
-                deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                robot.setSystemState(RobotV2.SystemStates.START);
                 break;
             case READY_FOR_PICKUP:
-                grippers.setPosition(constants.GRIPPERS_OPEN);
-                intakeSlides.intakeOut();
-                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
-                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
+                robot.setSystemState(RobotV2.SystemStates.LOW_HOVER);
                 if(actionTimer.seconds() > 4){
                     setActionState(ActionState.PICK_UP_SPECIMEN_1);
                 }
                 break;
             case PICK_UP_SPECIMEN_1:
                 if(actionTimer.seconds() < 1 && actionTimer.seconds() > 0){
-                    grippers.setPosition(constants.GRIPPERS_GRAB);
+                   robot.setSystemState(RobotV2.SystemStates.DOWN_ON_SAMPLE);
                 }
                 if(actionTimer.seconds() > 1 && actionTimer.seconds() < 2.75){
-                    diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
-                    diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
-                    if(actionTimer.seconds() > 2){
-                        intakeSlides.intakeAllTheWayIn();
-                    }
-                }
-                if(actionTimer.seconds() > 2.5 && actionTimer.seconds() < 3.75){
-                    if(actionTimer.seconds() > 3.2){
-                        grippers.setPosition(constants.GRIPPERS_OPEN);
-                    }
-                    else {
-                        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                    }
-                }
-                if(actionTimer.seconds() > 3.75 && actionTimer.seconds() < 5.75){
-                    if(actionTimer.seconds() > 4.75){
-                        deliveryAxon.setPosition(constants.DELIVERY_CLIP);
-                    }
-                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO, 1);
-                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO,1);
+                    robot.setSystemState(RobotV2.SystemStates.DOWN_ON_SAMPLE_GRAB);
                 }
                 if(actionTimer.seconds() > 5.75){
                     setPathState(PathState.TO_SUBMERSIBLE_1);
-                    setActionState(ActionState.IDLE);
-
+                    setActionState(ActionState.DELIVERY_POSITION);
                 }
                 break;
 
@@ -324,6 +286,11 @@ public class SpecimenAutoV3 extends OpMode {
                     setPathState(PathState.DONE);
                 }
                 break;
+            case DONE:
+                if(!follower.isBusy()){
+                    setActionState(ActionState.HANG_PRELOAD);
+                }
+                break;
         }
     }
 
@@ -345,6 +312,7 @@ public class SpecimenAutoV3 extends OpMode {
         // These loop the movements of the robot
         follower.update();
         autonomousPathUpdate();
+        robot.systemStatesUpdate();
         autonomousActionUpdate();
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
@@ -363,6 +331,7 @@ public class SpecimenAutoV3 extends OpMode {
         opmodeTimer = new ElapsedTime();
         actionTimer = new ElapsedTime();
         opmodeTimer.reset();
+        robot.init(hardwareMap, telemetry, RobotV2.Mode.AUTO, gamepad1);
         deliveryAxon.init(hardwareMap);
         deliveryGrippers.init(hardwareMap);
         slides.init(hardwareMap);
