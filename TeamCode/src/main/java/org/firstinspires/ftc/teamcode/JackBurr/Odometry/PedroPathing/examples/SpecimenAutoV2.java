@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotConstantsV1;
+import org.firstinspires.ftc.teamcode.JackBurr.Drive.RobotV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.DeliverySlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Motors.IntakeSlidesV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.constants.FConstantsLeft;
@@ -22,11 +23,13 @@ import org.firstinspires.ftc.teamcode.JackBurr.Servos.DifferentialV2;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.GrippersV1;
 import org.firstinspires.ftc.teamcode.JackBurr.Servos.WristAxonV1;
 
+import java.io.BufferedWriter;
+
 /**
  *This is a 1 plus 2 specimen delivery and park
  */
 
-@Autonomous(name = "Specimen Auto (V2.0)", group = "Coach")
+@Autonomous(name = "Specimen Auto V2", group = "Coach")
 public class SpecimenAutoV2 extends OpMode {
 
     private Follower follower;
@@ -75,7 +78,6 @@ public class SpecimenAutoV2 extends OpMode {
         DELIVERY_POSITION,
         HANG_PRELOAD,
         TRAVEL,
-        READY_FOR_PICKUP,
         PICK_UP_SPECIMEN_1,
         DELIVERY_POSITION_1,
         HANG_SPECIMEN_1,
@@ -85,23 +87,25 @@ public class SpecimenAutoV2 extends OpMode {
         PICK_UP_SPECIMEN_3,
         DELIVERY_POSITION_3,
         HANG_SPECIMEN_3,
-        IDLE
+
     }
     public PathState pathState = PathState.START;
     public ActionState actionState = ActionState.DELIVERY_POSITION;
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(9, 63, Math.toRadians(180));
-    private final Pose tosubmersiblePose = new Pose(36.5, 72, Math.toRadians(180));
+    private final Pose tosubmersiblePose = new Pose(28.5, 75, Math.toRadians(180));
+    private final Pose toSubmersibleOverdrive = new Pose(35.5, 72, Math.toRadians(180));
     private final Pose strafeoutPose = new Pose(30, 36, Math.toRadians(180));
     public final Pose strafeBehind1 = new Pose (60, 36, Math.toRadians(180));
     private final Pose strafebehindsample1Pose = new Pose(60, 25, Math.toRadians(180));
-    private final Pose pushsample1Pose = new Pose(23, 25, Math.toRadians(180));
+    private final Pose pushsample1Pose = new Pose(20, 25, Math.toRadians(180));
     private final Pose straightBack = new Pose(60, 25, Math.toRadians(180));
     private final Pose strafebehindsample2Pose = new Pose(60, 15, Math.toRadians(180));
-    private final Pose pushsample2Pose = new Pose(13, 15, Math.toRadians(180));
-    private final Pose positionspecimenpickupPose = new Pose(36, 15, Math.toRadians(180));
-    private final Pose pickupspecimen1Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose tosubmersible1Pose = new Pose(49, 135, Math.toRadians(0));
+    private final Pose pushsample2Pose = new Pose(20, 15, Math.toRadians(180));
+    private final Pose positionspecimenpickupPose = new Pose(35.5, 15, Math.toRadians(180));
+    //private final Pose pickupspecimen1Pose = new Pose(49, 135, Math.toRadians(0));
+    private final Pose tosubmersible1Pose = new Pose(28.5, 72, Math.toRadians(180));
+    private final Pose inFrontOfSubmersiblePose= new Pose(20.5, 75, Math.toRadians(180));
     private final Pose forwardtosubmersible1Pose = new Pose(49, 135, Math.toRadians(0));
     private final Pose backwardsfromsubmersible1Pose = new Pose(49, 135, Math.toRadians(0));
     private final Pose pickupspecimen2Pose = new Pose(49, 135, Math.toRadians(0));
@@ -117,8 +121,8 @@ public class SpecimenAutoV2 extends OpMode {
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    public Path scorePreload, pushSample01, strafeOut, strafeBehindSample1, releaseAndBack, strafeBehind01, strafeBehind2, pushSample2, positionSpecimenPickup, straightBackPath;
-    public PathChain strafeout, strafebehindsample1, pushSample1, straightBackChain, backwardsFromSample1, pickUpSpecimen1, toSubmersible1, forwardToSubmersible1, backwardsFromSubmersible1, pickUpSpecimen2, strafeToSubmersible2, forwardToSubmersible2, backwardsFromSubmersible2, pickUpSpecimen3, strafeToSubmersible3, forwardToSubmersible4, backwardsFromSubmersible3, strafeToPark;
+    public Path scorePreload, pushSample01, strafeOut, strafeBehindSample1, straightBackPath, releaseAndBack, strafeBehind01, strafeBehind2;
+    public PathChain strafeout, strafebehindsample1, pushSample1, straightBackChain, inFrontOfSubmersible1, backwardsFromSample1, pushSample2, positionSpecimenPickup, pickUpSpecimen1, toSubmersible1, forwardToSubmersible1, backwardsFromSubmersible1, pickUpSpecimen2, strafeToSubmersible2, forwardToSubmersible2, backwardsFromSubmersible2, pickUpSpecimen3, strafeToSubmersible3, forwardToSubmersible4, backwardsFromSubmersible3, strafeToPark;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -127,7 +131,7 @@ public class SpecimenAutoV2 extends OpMode {
 
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(new Point(startPose), new Point(tosubmersiblePose)));
-        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), tosubmersiblePose.getHeading());
+        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), toSubmersibleOverdrive.getHeading());
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         strafeOut = new Path(new BezierLine(new Point(tosubmersiblePose), new Point(strafeoutPose)));
         strafeOut.setLinearHeadingInterpolation(tosubmersiblePose.getHeading(), strafeoutPose.getHeading());
@@ -137,21 +141,15 @@ public class SpecimenAutoV2 extends OpMode {
         strafeBehindSample1.setLinearHeadingInterpolation(strafeBehind1.getHeading(), strafebehindsample1Pose.getHeading());
         pushSample01 = new Path(new BezierLine(new Point(strafebehindsample1Pose), new Point(pushsample1Pose)));
         pushSample01.setLinearHeadingInterpolation(strafebehindsample1Pose.getHeading(), pushsample1Pose.getHeading());
-        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-
-        /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         straightBackPath = new Path(new BezierLine(new Point(pushsample1Pose), new Point(straightBack)));
-        straightBackPath.setLinearHeadingInterpolation(pushsample1Pose.getHeading(), straightBack.getHeading());
-
+        straightBackPath.setLinearHeadingInterpolation(straightBack.getHeading(), pushsample1Pose.getHeading());
         strafeBehind2 = new Path(new BezierLine(new Point(straightBack), new Point(strafebehindsample2Pose)));
         strafeBehind2.setLinearHeadingInterpolation(straightBack.getHeading(), strafebehindsample2Pose.getHeading());
-
-        /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        pushSample2 = new Path(new BezierLine(new Point(strafebehindsample2Pose), new Point(pushsample2Pose)));
-        pushSample2.setLinearHeadingInterpolation(strafebehindsample2Pose.getHeading(), pushsample2Pose.getHeading());
-        positionSpecimenPickup = new Path(new BezierLine(new Point(pushsample2Pose), new Point(positionspecimenpickupPose)));
-        positionSpecimenPickup.setLinearHeadingInterpolation(pushsample2Pose.getHeading(), positionspecimenpickupPose.getHeading());
-
+        Path push2 = new Path(new BezierLine(new Point(strafebehindsample2Pose), new Point(pushsample2Pose)));
+        push2.setLinearHeadingInterpolation(strafebehindsample2Pose.getHeading(), pushsample2Pose.getHeading());
+        Path specPickup = new Path(new BezierLine(new Point(pushsample2Pose), new Point(positionspecimenpickupPose)));
+        specPickup.setLinearHeadingInterpolation(pushsample2Pose.getHeading(), positionspecimenpickupPose.getHeading());
+        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         pushSample1 = follower.pathBuilder()
                 .addPath(strafeOut)
                 .addPath(strafeBehind01)
@@ -159,13 +157,24 @@ public class SpecimenAutoV2 extends OpMode {
                 .addPath(pushSample01)
                 .addPath(straightBackPath)
                 .addPath(strafeBehind2)
-                .addPath(pushSample2)
+                .addPath(push2)
+                .addPath(specPickup)
                 .build();
 
+        /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+
+        /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+
         toSubmersible1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(positionspecimenpickupPose), new Point(tosubmersiblePose)))
-                .setLinearHeadingInterpolation(tosubmersiblePose.getHeading(), tosubmersiblePose.getHeading())
+                .addPath(new BezierLine(new Point(inFrontOfSubmersiblePose), new Point(tosubmersible1Pose)))
+                .setLinearHeadingInterpolation(positionspecimenpickupPose.getHeading(), tosubmersible1Pose.getHeading())
                 .build();
+
+        inFrontOfSubmersible1 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(positionspecimenpickupPose), new Point(inFrontOfSubmersiblePose)))
+                .setLinearHeadingInterpolation(positionspecimenpickupPose.getHeading(), tosubmersible1Pose.getHeading())
+                .build();
+
     }
 
     /** This switch is called continuously and runs the pathing, at certain points, it triggers the action state.
@@ -176,10 +185,10 @@ public class SpecimenAutoV2 extends OpMode {
             case DELIVERY_POSITION:
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                 if(actionTimer.seconds() < 4 && actionTimer.milliseconds() > 200) {
-                    deliveryAxon.setPosition(constants.DELIVERY_CLIP);
+                    deliveryAxon.setPosition(constants.DELIVERY_FLAT);
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO, 1);
-                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO, 1);
+                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR, 1);
+                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR, 1);
                 }
                 if(actionTimer.seconds() > 1) {
                     if(!pathStateSet2) {
@@ -189,68 +198,97 @@ public class SpecimenAutoV2 extends OpMode {
                 }
                 break;
             case HANG_PRELOAD:
-                //slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP_AUTO, 1);
-                //slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_CLIP_AUTO, 1);
-                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP, 1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_CLIP, 1);
+                if(actionTimer.seconds() > 1){
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                    deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                }
+                if(actionTimer.seconds() > 3){
+                    slides.runLeftSlideToPosition(0, 1);
+                    slides.runRightSlideToPosition(0, 1);
+                }
                 break;
             case TRAVEL:
                 slides.runLeftSlideToPosition(0, 1);
                 slides.runRightSlideToPosition(0, 1);
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 break;
-            case READY_FOR_PICKUP:
-                grippers.setPosition(constants.GRIPPERS_OPEN);
-                intakeSlides.intakeOut();
-                diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
-                diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
-                if(actionTimer.seconds() > 4){
-                    setActionState(ActionState.PICK_UP_SPECIMEN_1);
-                }
-                break;
             case PICK_UP_SPECIMEN_1:
-                if(actionTimer.seconds() < 1 && actionTimer.seconds() > 0){
-                    grippers.setPosition(constants.GRIPPERS_GRAB);
+                if(actionTimer.seconds() < 2){
+                    grippers.setPosition(constants.GRIPPERS_OPEN);
+                    wrist.setPosition(constants.WRIST_CENTER);
                 }
-                if(actionTimer.seconds() > 1 && actionTimer.seconds() < 2.75){
+                if(actionTimer.seconds() > 2 && actionTimer.seconds() < 4) {
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                    //}
+                    //else if(lastButtonPressed != 2) {
+                    // deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                    //}
+                    deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                    diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_LOW_HOVER);
+                    diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_LOW_HOVER);
+                    intakeSlides.intakeOut();
+                    grippers.setPosition(constants.GRIPPERS_OPEN);
+                }
+                if(actionTimer.seconds() > 4 && actionTimer.seconds() < 6) {
+                    diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
+                    diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
+                    //TODO: Change this if we should wait to grab'
+                    if(actionTimer.seconds() > 0.35){
+                        grippers.setPosition(constants.GRIPPERS_GRAB);
+                    }
+                }
+                if(actionTimer.seconds() > 6 && actionTimer.seconds() < 7){
                     diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                     diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
-                    if(actionTimer.seconds() > 2){
-                        intakeSlides.intakeAllTheWayIn();
-                    }
                 }
-                if(actionTimer.seconds() > 2.5 && actionTimer.seconds() < 3.75){
-                    if(actionTimer.seconds() > 3.2){
-                        grippers.setPosition(constants.GRIPPERS_OPEN);
+                if(actionTimer.seconds() > 7 && actionTimer.seconds() < 7.8){
+                    diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
+                    diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
+                    intakeSlides.intakeAllTheWayIn();
+                }
+                if(actionTimer.seconds() > 7.8 && actionTimer.seconds() < 8.3){
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                }
+                if(actionTimer.seconds() > 8.3 && actionTimer.seconds() < 8.5){
+                    grippers.setPosition(constants.GRIPPERS_OPEN);
+                }
+                if(actionTimer.seconds() < 12 && actionTimer.seconds() > 8.5) {
+                    deliveryAxon.setPosition(constants.DELIVERY_FLAT);
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR, 1);
+                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR, 1);
+                    setPathState(PathState.TO_SUBMERSIBLE_1);
+
+                }
+                if(actionTimer.seconds() > 12 && !follower.isBusy()) {
+                    if (actionTimer.seconds() > 20.5) {
+                        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                        deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                    }
+                    if (actionTimer.seconds() > 21) {
+                        slides.runLeftSlideToPosition(0, 1);
+                        slides.runRightSlideToPosition(0, 1);
                     }
                     else {
-                        deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
+                        slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP, 1);
+                        slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_CLIP, 1);
                     }
-                }
-                if(actionTimer.seconds() > 3.75 && actionTimer.seconds() < 5.75){
-                    if(actionTimer.seconds() > 4.75){
-                        deliveryAxon.setPosition(constants.DELIVERY_CLIP);
-                    }
-                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO, 1);
-                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO,1);
-                }
-                if(actionTimer.seconds() > 5.75){
-                    setPathState(PathState.TO_SUBMERSIBLE_1);
-                    setActionState(ActionState.IDLE);
-
                 }
                 break;
-
         }
     }
 
     public void autonomousPathUpdate() {
         switch (pathState) {
             case GO_TO_SUBMERSIBLE:
-                if(!follower.isBusy()){
+                if(!follower.isBusy() && !pathStateSet){
                     follower.followPath(scorePreload);
                     setPathState(PathState.RELEASE_AND_BACK);
                     actionTimer.reset();
                     actionStateSet = false;
+                    pathStateSet = true;
                 }
                 break;
             case RELEASE_AND_BACK:
@@ -267,6 +305,10 @@ public class SpecimenAutoV2 extends OpMode {
                 }
                 else {
                     actionTimer.reset();
+                    if(follower.getPose().getX() >= tosubmersiblePose.getX()){
+                        follower.breakFollowing();
+                        follower.holdPoint(tosubmersiblePose);
+                    }
                 }
                 break;
             case PUSH_SAMPLE1:
@@ -279,57 +321,40 @@ public class SpecimenAutoV2 extends OpMode {
                     }
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(pushSample1,true);
-                    setPathState(PathState.STRAFE_BEHIND_SAMPLE2);
-                }
-                break;
-            case STRAFE_BEHIND_SAMPLE2:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
-                    /* Score Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    setPathState(PathState.PUSH_SAMPLE2);
-                }
-                break;
-            case PUSH_SAMPLE2:
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if(!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(pushSample2, false);
                     setPathState(PathState.POSITION_SPECIMEN_PICKUP);
                 }
                 break;
             case POSITION_SPECIMEN_PICKUP:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
-                    /* Score Sample */
-                    follower.followPath(positionSpecimenPickup);
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are parked */
                     setPathState(PathState.PICK_UP_SPECIMEN_1);
                     actionStateSet = false;
-                    actionTimer.reset();
-                    pathTimer.reset();
                 }
                 break;
             case PICK_UP_SPECIMEN_1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
-                    /* Level 1 Ascent */
-                    if(!actionStateSet) {
-                        setActionState(ActionState.READY_FOR_PICKUP);
-                        actionStateSet = true;
-                    }
-                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */;
+                if(!actionStateSet) {
+                    setActionState(ActionState.PICK_UP_SPECIMEN_1);
+                    telemetry.addLine("set " + pathTimer.seconds());
+                    actionStateSet = true;
                 }
+                /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                 break;
             case TO_SUBMERSIBLE_1:
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()){
+                    follower.followPath(inFrontOfSubmersible1);
+                    setPathState(PathState.FORWARD_TO_SUBMERSIBLE_1);
+                }
+                break;
+            case FORWARD_TO_SUBMERSIBLE_1:
+                if(!follower.isBusy()){
                     follower.followPath(toSubmersible1);
                     setPathState(PathState.DONE);
                 }
                 break;
+            case DONE:
+                break;
+
         }
     }
 
@@ -337,6 +362,7 @@ public class SpecimenAutoV2 extends OpMode {
      * It will also reset the timers of the individual switches **/
     public void setPathState(PathState pState) {
         pathState = pState;
+        pathStateSet = false;
         pathTimer.reset();
     }
 
@@ -354,11 +380,10 @@ public class SpecimenAutoV2 extends OpMode {
         autonomousActionUpdate();
         // Feedback to Driver Hub
         telemetry.addData("path state", pathState);
+        telemetry.addData("action state", actionState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.addLine("Action state: " + actionState.toString());
-        telemetry.addLine("Action state timer: " + actionTimer.seconds());
         telemetry.update();
     }
 

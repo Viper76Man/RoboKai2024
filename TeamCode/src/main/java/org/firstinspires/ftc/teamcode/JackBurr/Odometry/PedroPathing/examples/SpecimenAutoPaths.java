@@ -16,15 +16,17 @@ public class SpecimenAutoPaths {
             specDepoFourPose = new Pose(42.000, 72.000, Math.toRadians(180)),
             specDepoFivePose = new Pose(42.000, 70.000, Math.toRadians(180)),
 
-    specIntakeOnePose = new Pose(5.5,34.000, Math.toRadians(180)),
-            specIntakeTwoPose = new Pose(5.5,34.000, Math.toRadians(180)),
-            specIntakeThreePose = new Pose(5.5,34.000, Math.toRadians(180)),
-            specIntakeFourPose = new Pose(5.5,34.000, Math.toRadians(180)),
+    specIntakeOnePose = new Pose(5.5,34.000, Math.toRadians(0)),
+            specIntakeTwoPose = new Pose(5.5,34.000, Math.toRadians(0)),
+            specIntakeThreePose = new Pose(5.5,34.000, Math.toRadians(0)),
+            specIntakeFourPose = new Pose(5.5,34.000, Math.toRadians(0)),
 
     pushPoseOne = new Pose(6.5,22, Math.toRadians(180)),
             pushPoseTwo = new Pose(6.5,11, Math.toRadians(180)),
             pushPoseThree1 = new Pose(60,6.75, Math.toRadians(180)),
             pushPoseThree2 = new Pose(6.5,pushPoseThree1.getY(), Math.toRadians(180)),
+
+    specDepoOnePoseTarget = new Pose(12.300, 78.000, Math.toRadians(180)),
 
     parkPose =  new Pose(6.299,34.000, Math.toRadians(180));
 

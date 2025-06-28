@@ -90,7 +90,7 @@ public class SpecimenAutoV4 extends OpMode {
     @Override
     public void init_loop() {
         controller.readButtons();
-
+        robot.deliveryGrippers.setPosition(robot.constants.DELIVERY_GRIPPERS_CLOSE);
         robot.update();
     }
 
@@ -108,7 +108,6 @@ public class SpecimenAutoV4 extends OpMode {
         robot.systemStatesUpdate();
         controller.readButtons();
         dashboardPoseTracker.update();
-
         follower.update();
         if (follower.getCurrentPath() != null) {
             Drawing.drawPath(follower.getCurrentPath(), "#808080");
@@ -120,12 +119,13 @@ public class SpecimenAutoV4 extends OpMode {
     }
 
     public void autoStateUpdate() {
+        logValues();
         switch (autoState) {
             case start:
                 //if (robot.deposit.claw.currentState == Claw.State.Closed) {
                 //robot.setDepositDesiredState(Deposit.State.specDeposit);
                 if(robot.stateTimer.seconds() > 4) {
-                    follower.followPath(specDepoOnePC, true);
+                    follower.followPath(specDepoOnePC, false);
                     autoState = AutoState.specDepoOne;
                 }
                 //}
@@ -154,7 +154,7 @@ public class SpecimenAutoV4 extends OpMode {
                 break;
 
             case samplePushTwo:
-                follower.setCentripetalScaling(0.0014);
+                //follower.setCentripetalScaling(0.0014);
                 follower.setMaxPower(0.9);
                 if (follower.getPose().getX() <= 15 && follower.getCurrentTValue() >= 0.5) {
                     follower.followPath(samplePushThreePC, true);
@@ -163,7 +163,7 @@ public class SpecimenAutoV4 extends OpMode {
                 break;
 
             case samplePushThree:
-                follower.setCentripetalScaling(0.0014);
+                //follower.setCentripetalScaling(0.0014);
                 follower.setMaxPower(0.9);
                 if (follower.getPose().getX() <= 15 && follower.getCurrentTValue() >= 0.5) {
                     follower.followPath(specIntakeTwoPC, true);
@@ -317,12 +317,14 @@ public class SpecimenAutoV4 extends OpMode {
     }
 
     private void depositSpec(PathChain nextPath, AutoState nextAutoState) {
-
+        follower.update();
         //follower.setCentripetalScaling(0.002);
         // If Vx meets velocity constraint and the path did not just start (t>=0.1) and specDepoStatus is driving, move to releasing status
-        if ((!follower.isBusy() || (Math.abs(follower.getVelocity().getXComponent()) <= 1 && follower.getCurrentTValue() >= 0.5)) && specDepoStatus == SpecDepoStatus.driving) {
+        if (follower.getPose().getX() >= SpecimenAutoPaths.specDepoOnePoseTarget.getX() && specDepoStatus == SpecDepoStatus.driving) {
             // if ((!follower.isBusy()) && specDepoStatus == SpecDepoStatus.driving) {
-            robot.grippers.setPosition(robot.constants.GRIPPERS_OPEN);
+            robot.setSystemState(RobotV2.SystemStates.CLIP_HIGH_BAR);
+            follower.holdPoint(SpecimenAutoPaths.specDepoOnePoseTarget);
+            follower.breakFollowing();
             specDepoStatus = SpecDepoStatus.releasing;
         } else {
             robot.setSystemState(RobotV2.SystemStates.DELIVER_HIGH_BAR);
@@ -336,5 +338,13 @@ public class SpecimenAutoV4 extends OpMode {
             specDepoStatus = SpecDepoStatus.driving;
             //follower.setCentripetalScaling(0.0012);
         }
+    }
+
+    public void logValues(){
+        telemetry.addLine("x: " + follower.getPose().getX());
+        telemetry.addLine("y: " + follower.getPose().getY());
+        telemetry.addLine("Follower is busy: " +  follower.isBusy());
+        telemetry.addLine("T value: " + follower.getCurrentTValue());
+        telemetry.addLine("Velocity constraints met: " + (Math.abs(follower.getVelocity().getXComponent()) <= 1));
     }
 }

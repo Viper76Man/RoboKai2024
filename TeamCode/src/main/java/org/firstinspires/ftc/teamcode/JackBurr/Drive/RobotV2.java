@@ -331,8 +331,6 @@ public class RobotV2 {
                 slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BASKET, 1);
                 if(Math.abs(slides.getLeftSlidePosition()) > (Math.abs(constants.LEFT_SLIDE_HIGH_BASKET + LEFT_SLIDE_DOWN)  / 2)){
                     deliveryAxon.setPosition(constants.DELIVERY_UP);
-                }
-                if(highBasketRange.isInRange(Math.abs(slides.getLeftSlidePosition()))){
                     stateFinished = true;
                 }
                 break;
@@ -456,12 +454,12 @@ public class RobotV2 {
                 }
                 break;
             case HOOK_HIGH_RUNG:
-                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT_HOOK, 1);
-                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT_HOOK, 1);
-                break;
-            case HANG:
                 slides.runLeftSlideToPosition(constants.LEFT_SLIDE_LEVEL_TWO_ASCENT, 1);
                 slides.runRightSlideToPosition(constants.RIGHT_SLIDE_LEVEL_TWO_ASCENT, 1);
+                break;
+            case HANG:
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HANG, 1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HANG, 1);
                 intakeSlides.intakeAllTheWayIn();
                 break;
             case LEVEL_ONE_ASCENT:
@@ -493,6 +491,7 @@ public class RobotV2 {
                             setSystemState(SystemStates.DELIVER_HIGH_BASKET);
                             break;
                         case DELIVER_HIGH_BASKET:
+                        case DROP_TO_HUMAN_PLAYER:
                             setSystemState(SystemStates.DROP_HIGH_BASKET);
                             break;
                         case DELIVER_LOW_BASKET:
@@ -509,9 +508,6 @@ public class RobotV2 {
                             break;
                         case DOWN_ON_SAMPLE_GRAB_2:
                             setSystemState(SystemStates.UNDER_LOW_BAR_SLIDES_IN_HOVER);
-                            break;
-                        case DROP_TO_HUMAN_PLAYER:
-                            setSystemState(SystemStates.START);
                             break;
                         case DELIVER_HIGH_BAR:
                             setSystemState(SystemStates.CLIP_HIGH_BAR);

@@ -90,7 +90,7 @@ public class SpecimenAuto extends OpMode {
     public ActionState actionState = ActionState.DELIVERY_POSITION;
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(9, 63, Math.toRadians(180));
-    private final Pose tosubmersiblePose = new Pose(36.5, 72, Math.toRadians(180));
+    private final Pose tosubmersiblePose = new Pose(28.5, 72, Math.toRadians(180));
     private final Pose strafeoutPose = new Pose(30, 36, Math.toRadians(180));
     public final Pose strafeBehind1 = new Pose (60, 36, Math.toRadians(180));
     private final Pose strafebehindsample1Pose = new Pose(60, 25, Math.toRadians(180));
@@ -175,10 +175,10 @@ public class SpecimenAuto extends OpMode {
             case DELIVERY_POSITION:
                 deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                 if(actionTimer.seconds() < 4 && actionTimer.milliseconds() > 200) {
-                    deliveryAxon.setPosition(constants.DELIVERY_CLIP);
+                    deliveryAxon.setPosition(constants.DELIVERY_FLAT);
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
-                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_AUTO, 1);
-                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_AUTO, 1);
+                    slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR, 1);
+                    slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR, 1);
                 }
                 if(actionTimer.seconds() > 1) {
                     if(!pathStateSet2) {
@@ -188,9 +188,16 @@ public class SpecimenAuto extends OpMode {
                 }
                 break;
             case HANG_PRELOAD:
-                //slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP_AUTO, 1);
-                //slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_CLIP_AUTO, 1);
-                deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                slides.runLeftSlideToPosition(constants.LEFT_SLIDE_HIGH_BAR_CLIP, 1);
+                slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR_CLIP, 1);
+                if(actionTimer.seconds() > 1){
+                    deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
+                    deliveryAxon.setPosition(constants.DELIVERY_GRAB);
+                }
+                if(actionTimer.seconds() > 3){
+                    slides.runLeftSlideToPosition(0, 1);
+                    slides.runRightSlideToPosition(0, 1);
+                }
                 break;
             case TRAVEL:
                 slides.runLeftSlideToPosition(0, 1);
@@ -203,11 +210,12 @@ public class SpecimenAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case GO_TO_SUBMERSIBLE:
-                if(!follower.isBusy()){
+                if(!follower.isBusy() && !pathStateSet){
                     follower.followPath(scorePreload);
                     setPathState(PathState.RELEASE_AND_BACK);
                     actionTimer.reset();
                     actionStateSet = false;
+                    pathStateSet = true;
                 }
                 break;
             case RELEASE_AND_BACK:
@@ -289,6 +297,7 @@ public class SpecimenAuto extends OpMode {
      * It will also reset the timers of the individual switches **/
     public void setPathState(PathState pState) {
         pathState = pState;
+        pathStateSet = false;
         pathTimer.reset();
     }
 

@@ -171,6 +171,9 @@ public class BucketAutoV3 extends OpMode {
         scorePickup3 = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(pickup3Pose), new Point(scorePose)))
                 .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
+                .addTemporalCallback(0, ()-> {
+                    robot.setSystemState(RobotV2.SystemStates.DELIVER_HIGH_BASKET);
+                })
                 .build();
 
         /* This is our park path. We are using a BezierCurve with 3 points, which is a curved line that is curved based off of the control point */
@@ -330,6 +333,24 @@ public class BucketAutoV3 extends OpMode {
                 }
                 break;
             case 6:
+                if(!follower.isBusy()) {
+                    wrist.setPosition(constants.WRIST_CENTER);
+                    if (!pathFollowed) {
+                        follower.followPath(scorePickup3);
+                        stateTimer.reset();
+                        pathFollowed = true;
+                    }
+                    if (pathFollowed && !follower.isBusy()) {
+                        if (robot.systemState == RobotV2.SystemStates.DELIVER_HIGH_BASKET && robot.stateFinished  && robot.stateTimer.seconds() > 2) {
+                            robot.setSystemState(RobotV2.SystemStates.DROP_HIGH_BASKET);
+                        }
+                        if (robot.systemState == RobotV2.SystemStates.START && robot.stateFinished) {
+                            setPathState(7);
+                            stateTimer.reset();
+                            pathFollowed = false;
+                        }
+                    }
+                }
                 break;
         }
     }

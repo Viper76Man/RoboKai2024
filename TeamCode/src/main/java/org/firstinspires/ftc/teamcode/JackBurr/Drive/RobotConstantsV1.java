@@ -11,8 +11,8 @@ public class RobotConstantsV1 {
     public double GRIPPERS_OPEN = 0.45;
     public double GRIPPERS_CLOSE = 0;
     public double GRIPPERS_GRAB = 0.05;
-    public double DELIVERY_GRIPPERS_CLOSE = 0.9;
-    public double DELIVERY_GRIPPERS_GRAB = 0.6;
+    public double DELIVERY_GRIPPERS_CLOSE = 0.95;
+    public double DELIVERY_GRIPPERS_GRAB = 0.8;
     public double DELIVERY_GRIPPERS_OPEN = 0.25;
     //===============================================================================================================
     //SERVOS=========================================================================================================
