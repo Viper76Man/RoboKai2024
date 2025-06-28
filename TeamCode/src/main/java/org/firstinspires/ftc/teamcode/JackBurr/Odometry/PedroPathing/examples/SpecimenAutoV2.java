@@ -215,11 +215,11 @@ public class SpecimenAutoV2 extends OpMode {
                 deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                 break;
             case PICK_UP_SPECIMEN_1:
-                if(actionTimer.seconds() < 2){
+                if(actionTimer.seconds() < 1){
                     grippers.setPosition(constants.GRIPPERS_OPEN);
                     wrist.setPosition(constants.WRIST_CENTER);
                 }
-                if(actionTimer.seconds() > 2 && actionTimer.seconds() < 4) {
+                if(actionTimer.seconds() > 1 && actionTimer.seconds() < 2) {
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                     //}
                     //else if(lastButtonPressed != 2) {
@@ -231,30 +231,30 @@ public class SpecimenAutoV2 extends OpMode {
                     intakeSlides.intakeOut();
                     grippers.setPosition(constants.GRIPPERS_OPEN);
                 }
-                if(actionTimer.seconds() > 4 && actionTimer.seconds() < 6) {
+                if(actionTimer.seconds() > 2 && actionTimer.seconds() < 3) {
                     diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
                     diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
                     //TODO: Change this if we should wait to grab'
-                    if(actionTimer.seconds() > 0.35){
+                    if(actionTimer.seconds() > 2.35){
                         grippers.setPosition(constants.GRIPPERS_GRAB);
                     }
                 }
-                if(actionTimer.seconds() > 6 && actionTimer.seconds() < 7){
+                if(actionTimer.seconds() > 3 && actionTimer.seconds() < 4){
                     diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                     diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
                 }
-                if(actionTimer.seconds() > 7 && actionTimer.seconds() < 7.8){
+                if(actionTimer.seconds() > 4 && actionTimer.seconds() < 4.8){
                     diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_TRANSFER);
                     diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_TRANSFER);
                     intakeSlides.intakeAllTheWayIn();
                 }
-                if(actionTimer.seconds() > 7.8 && actionTimer.seconds() < 8.3){
+                if(actionTimer.seconds() > 4.8 && actionTimer.seconds() < 5.3){
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                 }
-                if(actionTimer.seconds() > 8.3 && actionTimer.seconds() < 8.5){
+                if(actionTimer.seconds() > 5.3 && actionTimer.seconds() < 5.5){
                     grippers.setPosition(constants.GRIPPERS_OPEN);
                 }
-                if(actionTimer.seconds() < 12 && actionTimer.seconds() > 8.5) {
+                if(actionTimer.seconds() < 9 && actionTimer.seconds() > 5.5) {
                     deliveryAxon.setPosition(constants.DELIVERY_FLAT);
                     deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_CLOSE);
                     slides.runRightSlideToPosition(constants.RIGHT_SLIDE_HIGH_BAR, 1);
@@ -262,12 +262,12 @@ public class SpecimenAutoV2 extends OpMode {
                     setPathState(PathState.TO_SUBMERSIBLE_1);
 
                 }
-                if(actionTimer.seconds() > 12 && !follower.isBusy()) {
-                    if (actionTimer.seconds() > 20.5) {
+                if(actionTimer.seconds() > 9 && !follower.isBusy()) {
+                    if (actionTimer.seconds() > 17.5) {
                         deliveryGrippers.setPosition(constants.DELIVERY_GRIPPERS_OPEN);
                         deliveryAxon.setPosition(constants.DELIVERY_GRAB);
                     }
-                    if (actionTimer.seconds() > 21) {
+                    if (actionTimer.seconds() > 18) {
                         slides.runLeftSlideToPosition(0, 1);
                         slides.runRightSlideToPosition(0, 1);
                     }
