@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.JackBurr.Odometry.PedroPathing.examples;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
+import com.pedropathing.pathgen.BezierCurve;
 import com.pedropathing.pathgen.BezierLine;
 import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
@@ -106,22 +107,32 @@ public class SpecimenAutoV3 extends OpMode {
     //private final Pose pickupspecimen1Pose = new Pose(49, 135, Math.toRadians(0));
     private final Pose tosubmersible1Pose = new Pose(28.5, 72, Math.toRadians(180));
     private final Pose inFrontOfSubmersiblePose= new Pose(20.5, 75, Math.toRadians(180));
-    private final Pose forwardtosubmersible1Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose backwardsfromsubmersible1Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose pickupspecimen2Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose tosubmersible2Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose forwardtosubmersible2Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose backwardsfromsubmersible2Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose pickupspecimen3Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose tosubmersible3Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose forwardtosubmersible3Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose backwardfromsubmersible3Pose = new Pose(49, 135, Math.toRadians(0));
-    private final Pose strafetoparkPose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose forwardtosubmersible1Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose backwardsfromsubmersible1Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose pickupspecimen2Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose tosubmersible2Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose forwardtosubmersible2Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose backwardsfromsubmersible2Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose pickupspecimen3Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose tosubmersible3Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose forwardtosubmersible3Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose backwardfromsubmersible3Pose = new Pose(49, 135, Math.toRadians(0));
+    //private final Pose strafetoparkPose = new Pose(49, 135, Math.toRadians(0));
+    public final Pose point01 = new Pose(61, 48.7, Math.toRadians(180));
+    public final Pose point02 = new Pose(99, 23.6, Math.toRadians(180));
+    public final Pose point03 = new Pose(65, 13.7, Math.toRadians(180));
+    public final Pose point04 = new Pose(8.1, 19, Math.toRadians(180));
+    public final Pose point05 = new Pose(30.3, 34.1, Math.toRadians(180));
+    public final Pose point06 = new Pose(1.1, 23.1, Math.toRadians(180));
+    public final Pose point07 = new Pose(34.5, 15.5, Math.toRadians(180));
+    public final Pose point08 = new Pose(143.3, 27.6, Math.toRadians(180));
+    public final Pose point09 = new Pose(13.5, 8, Math.toRadians(180));
+
 
 
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    public Path scorePreload, pushSample01, strafeOut, strafeBehindSample1, straightBackPath, releaseAndBack, strafeBehind01, strafeBehind2;
+    public Path scorePreload, pushSample01, curves, strafeOut, strafeBehindSample1, straightBackPath, releaseAndBack, strafeBehind01, strafeBehind2;
     public PathChain strafeout, strafebehindsample1, pushSample1, straightBackChain, inFrontOfSubmersible1, backwardsFromSample1, pushSample2, positionSpecimenPickup, pickUpSpecimen1, toSubmersible1, forwardToSubmersible1, backwardsFromSubmersible1, pickUpSpecimen2, strafeToSubmersible2, forwardToSubmersible2, backwardsFromSubmersible2, pickUpSpecimen3, strafeToSubmersible3, forwardToSubmersible4, backwardsFromSubmersible3, strafeToPark;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
@@ -135,32 +146,10 @@ public class SpecimenAutoV3 extends OpMode {
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         strafeOut = new Path(new BezierLine(new Point(tosubmersiblePose), new Point(strafeoutPose)));
         strafeOut.setLinearHeadingInterpolation(tosubmersiblePose.getHeading(), strafeoutPose.getHeading());
-        strafeBehind01 = new Path(new BezierLine(new Point(strafeoutPose), new Point(strafeBehind1)));
-        strafeBehind01.setLinearHeadingInterpolation(strafeoutPose.getHeading(), strafeBehind1.getHeading());
-        strafeBehindSample1 = new Path(new BezierLine(new Point(strafeBehind1), new Point(strafebehindsample1Pose)));
-        strafeBehindSample1.setLinearHeadingInterpolation(strafeBehind1.getHeading(), strafebehindsample1Pose.getHeading());
-        pushSample01 = new Path(new BezierLine(new Point(strafebehindsample1Pose), new Point(pushsample1Pose)));
-        pushSample01.setLinearHeadingInterpolation(strafebehindsample1Pose.getHeading(), pushsample1Pose.getHeading());
-        straightBackPath = new Path(new BezierLine(new Point(pushsample1Pose), new Point(straightBack)));
-        straightBackPath.setLinearHeadingInterpolation(straightBack.getHeading(), pushsample1Pose.getHeading());
-        strafeBehind2 = new Path(new BezierLine(new Point(straightBack), new Point(strafebehindsample2Pose)));
-        strafeBehind2.setLinearHeadingInterpolation(straightBack.getHeading(), strafebehindsample2Pose.getHeading());
-        Path push2 = new Path(new BezierLine(new Point(strafebehindsample2Pose), new Point(pushsample2Pose)));
-        push2.setLinearHeadingInterpolation(strafebehindsample2Pose.getHeading(), pushsample2Pose.getHeading());
-        Path specPickup = new Path(new BezierLine(new Point(pushsample2Pose), new Point(positionspecimenpickupPose)));
-        specPickup.setLinearHeadingInterpolation(pushsample2Pose.getHeading(), positionspecimenpickupPose.getHeading());
-        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        pushSample1 = follower.pathBuilder()
-                .addPath(strafeOut)
-                .addPath(strafeBehind01)
-                .addPath(strafeBehindSample1)
-                .addPath(pushSample01)
-                .addPath(straightBackPath)
-                .addPath(strafeBehind2)
-                .addPath(push2)
-                .addPath(specPickup)
-                .build();
 
+        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        curves = new Path(new BezierCurve(new Point(strafeoutPose), new Point(point01), new Point(point02), new Point(point03), new Point(point04), new Point(point05), new Point(point06), new Point(point06), new Point(point07), new Point(point08), new Point(point09)));
+        curves.setLinearHeadingInterpolation(point01.getHeading(), point09.getHeading());
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -294,7 +283,6 @@ public class SpecimenAutoV3 extends OpMode {
             case RELEASE_AND_BACK:
                 if(!follower.isBusy()) {
                     if(!actionStateSet) {
-                        follower.setMaxPower(0.7);
                         setActionState(ActionState.HANG_PRELOAD);
                         actionStateSet = true;
                     }
@@ -320,7 +308,7 @@ public class SpecimenAutoV3 extends OpMode {
                         actionStateSet = true;
                     }
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(pushSample1,true);
+                    follower.followPath(curves,true);
                     setPathState(PathState.POSITION_SPECIMEN_PICKUP);
                 }
                 break;

@@ -36,6 +36,7 @@ public class RobotConstantsV1 {
     public double DELIVERY_CLIP = 0.515; //0.76
     public double DELIVERY_WALL_PICKUP = 0.69; //0.755
     public double DELIVERY_FLAT = 0.69;
+    public double DELIVERY_FLAT_DROP = 0.72;
     public double WRIST_CENTER = 0.21;
     //MOTORS=========================================================================================================
     public int INTAKE_IN = 52;

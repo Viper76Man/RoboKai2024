@@ -273,10 +273,10 @@ public class RobotV2 {
                 diffV2.setTopRightServoPosition(constants.FRONT_RIGHT_PICKUP);
                 diffV2.setTopLeftServoPosition(constants.FRONT_LEFT_PICKUP);
                 //TODO: Change this if we should wait to grab'
-                if(stateTimer.seconds() > 0.35){
+                if(stateTimer.seconds() > 0.2){
                     stateFinished = true;
                 }
-                if(stateTimer.seconds() > 0.35 && lastButtonPressed == 1){
+                if(stateTimer.seconds() > 0.2 && lastButtonPressed == 1){
                     setSystemState(SystemStates.DOWN_ON_SAMPLE_GRAB);
                 }
                 slowmode = true;
